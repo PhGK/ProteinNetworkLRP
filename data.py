@@ -52,7 +52,25 @@ def load_data_cv(loop, number_of_loops):
 
 
 
-load_data_cv(1,10)
+
+def load_data_cv_from_frame(df, loop, number_of_loops):
+
+    nsamples, nfeatures = df.shape
+    sample_names, feature_names = np.array(df.index), np.array(df.columns)
+
+    np.random.seed(0)
+    indices = np.random.permutation(nsamples)
+    chunks = np.array_split(indices, number_of_loops)
+   
+    test_indices = chunks[loop]
+    train_indices = np.delete(indices, test_indices)
+    
+    test_data = df.iloc[test_indices,:]
+    train_data = df.iloc[train_indices,:]
+
+    return train_data, test_data
+
+
 
 
 
