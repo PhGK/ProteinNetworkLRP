@@ -34,11 +34,12 @@ def calc_all_patients(fold):
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
 
 
-    loss = model.train(train_data, test_data, 2)
+    loss = model.train(train_data, test_data, 200)
+    print(loss)
 
 
     for sample_id, sample_name in enumerate(test_data.index):
-        model.compute_network(test_data,sample_name, sample_id,RESULTPATH)
+        model.compute_network(test_data,sample_name, sample_id,RESULTPATH,device = tc.device("cuda:0" if cuda else "cpu") )
 
     #Parallel(n_jobs=njobs)(delayed(model.compute_network)(test_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")) 
     #    for sample_id, sample_name in enumerate(test_data.index))

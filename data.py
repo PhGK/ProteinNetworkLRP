@@ -47,6 +47,11 @@ def load_data_cv(loop, number_of_loops):
     train_data = data_tensor[train_indices,:]
     train_names = sample_names[train_indices]
 
+    meanv, sdv = train_data.mean(axis=0), train_data.std(axis=0)
+
+    train_data = (train_data-meanv)(sdv)
+    test_data = (test_data-meanv)(sdv)
+    #todo: normalize
 
     return train_data.float(), test_data.float(), feature_names, train_names, test_names
 
@@ -67,6 +72,14 @@ def load_data_cv_from_frame(df, loop, number_of_loops):
     
     test_data = df.iloc[test_indices,:]
     train_data = df.iloc[train_indices,:]
+
+    meanv, sdv = train_data.mean(axis=0), train_data.std(axis=0)
+
+    train_data = (train_data-meanv)/sdv
+    test_data = (test_data-meanv)/sdv
+    print(test_data.mean(axis=0), test_data.std(axis=0))
+
+    #todo: normalize
 
     return train_data, test_data
 

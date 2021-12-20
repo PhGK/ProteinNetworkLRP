@@ -206,7 +206,7 @@ class LRP:
                 optimizer.step()
 	    
 
-            if epoch in [1,5,10,20,30,40,50,60,70,80,90,100, 110, 120,130,140,150,160,170,180,190,200, 250, 300, 350, 400]:
+            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400]:
                 print(epoch)
                 self.model.eval()
                 testset = Dataset_train_from_pandas(test_data)
@@ -266,7 +266,7 @@ class LRP:
             LRP_value, error, y, y_pred = self.compute_LRP(test_data, target, sample_id, batch_size = 100, device = device)
             assert sample_name == sample_names[sample_id], 'sample names not correct'
 
-            frame = pd.DataFrame({'LRP': LRP_value, 'predicting_protein': feature_names, 'masked_protein_gene': feature_names[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
+            frame = pd.DataFrame({'LRP': LRP_value, 'predicting_protein': feature_names, 'masked_protein': feature_names[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
             end_frame.append(frame)
             end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + sample_name +'.csv'
             if not os.path.exists(result_path + 'raw_data/'):
