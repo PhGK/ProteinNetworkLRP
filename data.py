@@ -3,24 +3,6 @@ import torch as tc
 import numpy as np
 from sklearn.preprocessing import RobustScaler, PowerTransformer, QuantileTransformer
 
-def load_data():
-
-    dataframe = pd.read_csv('./data/tcpa_data_051017.csv')
-    sample_name, cancer_type = dataframe['ID'], dataframe['Cancer_Type']
-    data = dataframe.loc[:, (dataframe.columns !='ID') & (dataframe.columns != 'Cancer_Type')]
-
-
-    print(sample_name, cancer_type)
-    print(data)
-
-    g
-
-
-
-    return train_set.float(), test_set.float(), feature_names, train_names, test_names, ground_truth
-
-
-
 def load_data_cv(loop, number_of_loops):
     dataframe = pd.read_csv('./data/tcpa_data_051017.csv')
 
@@ -49,8 +31,8 @@ def load_data_cv(loop, number_of_loops):
 
     meanv, sdv = train_data.mean(axis=0), train_data.std(axis=0)
 
-    train_data = (train_data-meanv)(sdv)
-    test_data = (test_data-meanv)(sdv)
+    train_data = (train_data-meanv)/sdv
+    test_data = (test_data-meanv)/sdv
     #todo: normalize
 
     return train_data.float(), test_data.float(), feature_names, train_names, test_names
@@ -78,8 +60,6 @@ def load_data_cv_from_frame(df, loop, number_of_loops):
     train_data = (train_data-meanv)/sdv
     test_data = (test_data-meanv)/sdv
     print(test_data.mean(axis=0), test_data.std(axis=0))
-
-    #todo: normalize
 
     return train_data, test_data
 

@@ -6,7 +6,7 @@ from scipy.spatial.distance import cdist, euclidean
 
 
 class Dataset_train(Dataset):
-    def __init__(self, df, interval =(0.01, 0.99)):
+    def __init__(self, data, interval =(0.01, 0.99)):
         self.nsamples, self.nfeatures = data.shape
         self.data = data
         self.l = data.shape[0]
