@@ -19,7 +19,7 @@ import copy
 
 from itertools import permutations
 import pandas as pd
-from dataloading import Dataset_train_from_pandas, Dataset_LRP
+from dataloading import Dataset_train_from_pandas, Dataset_LRP_from_pandas
 import os
 
 
@@ -226,58 +226,56 @@ class LRP:
         return pd.concat(losses)
 
 
+    def compute_LRP(self, test_set, target_id, sample_id, batch_size, device = tc.device('cpu')):
+        criterion = nn.MSELoss()
+        testset = Dataset_LRP_from_pandas(test_set, target_id, sample_id)
+        testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
+
+        self.model.to(device).eval()
+
+        masked_data, mask, full_data = next(iter(testloader))
+        masked_data, mask, full_data = masked_data.to(device), mask.to(device), full_data.to(device)
+        pred = self.model(masked_data)
+
+        error = criterion(pred.detach()[:,target_id], full_data.detach()[:,target_id]).cpu().numpy()
+        y = full_data.detach()[:,target_id].cpu().mean().numpy()
+        y_pred = pred.detach()[:,target_id].cpu().mean().numpy()
+
+        R = tc.zeros_like(pred)
+        R[:,target_id] = pred[:,target_id].clone()
+
+        a = self.model.relprop(R)
+        LRP_sum = (a.sum(dim=0))
+
+        LRP_unexpanded = 0.5 * (LRP_sum[:LRP_sum.shape[0] // 2] + LRP_sum[LRP_sum.shape[0] // 2:])
 
 
+        mask_sum = mask.sum(dim=0).float()
 
-def compute_LRP(neuralnet, test_set, target_id, sample_id, batch_size, device):
-    criterion = nn.MSELoss()
-    testset = Dataset_LRP(test_set, target_id, sample_id)
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
+        LRP_scaled = LRP_unexpanded/mask_sum
+        LRP_scaled = tc.where(tc.isnan(LRP_scaled),tc.tensor(0.0).to(device), LRP_scaled)
 
-    neuralnet.to(device).eval()
-
-    masked_data, mask, full_data = next(iter(testloader))
-    masked_data, mask, full_data = masked_data.to(device), mask.to(device), full_data.to(device)
-    pred = neuralnet(masked_data)
-
-    error = criterion(pred.detach()[:,target_id], full_data.detach()[:,target_id]).cpu().numpy()
-    y = full_data.detach()[:,target_id].cpu().mean().numpy()
-    y_pred = pred.detach()[:,target_id].cpu().mean().numpy()
-
-    R = tc.zeros_like(pred)
-    R[:,target_id] = pred[:,target_id].clone()
-    #R = R.to(device)
-    a = neuralnet.relprop(R)
-    LRP_sum = (a.sum(dim=0))
-
-    LRP_unexpanded = 0.5 * (LRP_sum[:LRP_sum.shape[0] // 2] + LRP_sum[LRP_sum.shape[0] // 2:])
+        return LRP_scaled.cpu().numpy(), error, y , y_pred
 
 
-    mask_sum = mask.sum(dim=0).float()
+    def compute_network(self, test_data, sample_name, sample_id, result_path, device = tc.device('cuda:0'), run = 0):
+        end_frame = []
 
-    LRP_scaled = LRP_unexpanded/mask_sum
-    LRP_scaled = tc.where(tc.isnan(LRP_scaled),tc.tensor(0.0).to(device), LRP_scaled)
+        sample_names, feature_names = np.array(test_data.index), np.array(test_data.columns)
+        for target in range(test_data.shape[1]):
+            LRP_value, error, y, y_pred = self.compute_LRP(test_data, target, sample_id, batch_size = 100, device = device)
+            assert sample_name == sample_names[sample_id], 'sample names not correct'
 
-    return LRP_scaled.cpu().numpy(), error, y , y_pred
-
-
-def calc_all_paths(neuralnet, test_data, sample_id, sample_name, featurenames, data_type, result_path, device = tc.device('cuda:0'), run = 0):
-    #if not os.path.exists(result_path + data_type + '/'):
-    #    os.makedirs(result_path + data_type + '/')
-    end_frame = []
-
-    for target in range(test_data.shape[1]):
-        LRP_value, error, y, y_pred = compute_LRP(neuralnet, test_data, target, sample_id, batch_size = 200, device = device)
-
-        frame = pd.DataFrame({'LRP': LRP_value, 'source_gene': featurenames, 'target_gene': featurenames[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
-        end_frame.append(frame)
-        end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + sample_name + str(run) +'.csv'
-        if not os.path.exists(result_path + 'raw_data/'):
-            os.makedirs(result_path + 'raw_data/')
+            frame = pd.DataFrame({'LRP': LRP_value, 'predicting_protein': feature_names, 'masked_protein_gene': feature_names[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
+            end_frame.append(frame)
+            end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + sample_name +'.csv'
+            if not os.path.exists(result_path + 'raw_data/'):
+                os.makedirs(result_path + 'raw_data/')
 
  
-    end_frame = pd.concat(end_frame, axis=0)
-    end_frame.to_csv(end_result_path)
+        end_frame = pd.concat(end_frame, axis=0)
+        end_frame['sample_name'] = sample_name
+        end_frame.to_csv(end_result_path)
 
 
 def createLRPau_withmean(data):
