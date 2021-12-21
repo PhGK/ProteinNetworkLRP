@@ -7,7 +7,7 @@ import sys
 import os
 import pandas as pd
 import numpy as np
-
+from joblib import Parallel, delayed
 
 PATH = '.'
 
@@ -18,12 +18,14 @@ RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
 if os.path.exists(RESULTPATH):
     os.remove(RESULTPATH)
 
-nepochs = 401
-for loop in range(10):
-    for learning_rate in [0.01, 0.001, 0.0001]:
-        for hidden_depth in [3,4,5,6,7]:
-            for hidden_factor in [5, 10, 20, 40]:
-                train_data, test_data, featurenames, train_names, test_names = load_data_cv(loop,10)
+nepochs = 801
+
+def crossval(loop):
+    for learning_rate in [0.01, 0.005, 0.001]:
+        for hidden_depth in [3,4,5,6]:
+            for hidden_factor in [3, 5, 10, 20]:
+                print(learning_rate, hidden_depth, hidden_factor)
+                train_data, test_data, featurenames, train_names, test_names = load_data_cv(loop,5)
                 model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
                     hidden_depth=hidden_depth)
 
@@ -43,3 +45,6 @@ for loop in range(10):
                     str(hidden_factor) +   '.pt')
 
                 losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
+
+Parallel(n_jobs=5)(delayed(crossval)(loop) for loop in range(5))
+

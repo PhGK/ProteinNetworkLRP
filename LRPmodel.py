@@ -200,8 +200,8 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc
             optimizer.step()
             
 
-        if epoch in [1,5,10,20,30,40,50,60,70,80,90,100, 110, 120,130,140,150,160,170,180,190,200, 250, 300, 350, 400]:
-            print(epoch)
+        if epoch in [1, 100, 150, 200, 250, 300, 350, 400, 450,500,550,600,650,700,750,800]:
+
             neuralnet.eval()
             testset = Dataset_train(test_data)
             testloader = DataLoader(testset, batch_size=test_data.shape[0], shuffle=False)
