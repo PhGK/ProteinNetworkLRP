@@ -38,6 +38,40 @@ def load_data_cv(loop, number_of_loops):
     return train_data.float(), test_data.float(), feature_names, train_names, test_names
 
 
+def load_data_cv_overlap(loop, number_of_loops):
+    dataframe = pd.read_csv('./data/tcpa_data_051017.csv')
+
+    Reactome_genes = pd.read_csv('./data/int_react_147_060418.csv', delimiter='\t', index_col=0, header=None)
+    df_filtered = dataframe[['ID'] + list(Reactome_genes.index) ]
+
+    print(df_filtered.shape)
+    nsamples, nfeatures = df_filtered.shape
+    sample_names, feature_names = np.array(df_filtered['ID']), np.array(df_filtered.columns)
+    data = df_filtered.loc[:, (df_filtered.columns !='ID') & (df_filtered.columns != 'Cancer_Type')]
+
+    data_tensor = tc.tensor(np.array(data))
+
+    np.random.seed(loop)
+    indices = np.random.permutation(nsamples)
+   
+    test_indices = indices[:int(indices.shape[0]*0.25)]
+    train_indices = indices[int(indices.shape[0]*0.25):]
+    
+    test_data = data_tensor[test_indices,:]
+    test_names = sample_names[test_indices]
+
+    train_data = data_tensor[train_indices,:]
+    train_names = sample_names[train_indices]
+
+    meanv, sdv = train_data.mean(axis=0), train_data.std(axis=0)
+
+    train_data = (train_data-meanv)/sdv
+    test_data = (test_data-meanv)/sdv
+    #todo: normalize
+
+    return train_data.float(), test_data.float(), feature_names, train_names, test_names
+
+
 
 
 def load_data_cv_from_frame(df, loop, number_of_loops):

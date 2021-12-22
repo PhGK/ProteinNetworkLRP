@@ -20,6 +20,7 @@ from itertools import permutations
 import pandas as pd
 from dataloading import Dataset_train#, Dataset_LRP
 import os
+import time
 
 
 class LRP_Linear2(nn.Module):
@@ -184,6 +185,7 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc
     neuralnet.train().to(device)
 
     losses = []
+    t1 = time.time()
     for epoch in range(epochs):
         trainset = Dataset_train(train_data)
         trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
@@ -200,7 +202,7 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc
             optimizer.step()
             
 
-        if epoch in [1, 100, 150, 200, 250, 300, 350, 400, 450,500,550,600,650,700,750,800]:
+        if epoch in [1, 100, 150, 200, 250, 300, 350, 400, 450,500,550,600,650,700,750,800, 900, 1000, 1100, 1200]:
 
             neuralnet.eval()
             testset = Dataset_train(test_data)
@@ -216,7 +218,7 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc
                 break
 
             losses.append(pd.DataFrame({'trainloss': [loss.detach().cpu().numpy()], 'testloss': [testloss.cpu().numpy()], 'epoch': [epoch]}))
-
+    print(time.time()-t1)
     return pd.concat(losses)
 
 
