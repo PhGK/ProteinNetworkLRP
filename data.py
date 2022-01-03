@@ -98,7 +98,26 @@ def load_data_cv_from_frame(df, loop, number_of_loops):
     return train_data, test_data
 
 
+def load_data_from_frame_overlap(df):
 
+    nsamples, nfeatures = df.shape
+    sample_names, feature_names = np.array(df.index), np.array(df.columns)
+
+    np.random.seed(100)
+    indices = np.random.permutation(nsamples)
+   
+    test_indices = indices[:int(indices.shape[0]*0.25)]
+    train_indices = indices[int(indices.shape[0]*0.25):]
+    
+    test_data = df.iloc[test_indices,:]
+    train_data = df.iloc[train_indices,:]
+
+    meanv, sdv = train_data.mean(axis=0), train_data.std(axis=0)
+
+    train_data = (train_data-meanv)/sdv
+    test_data = (test_data-meanv)/sdv
+
+    return train_data, test_data
 
 
 

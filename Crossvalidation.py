@@ -15,22 +15,22 @@ PATH = '.'
 
 model_path = PATH + '/results/crossvalidation/models/'
 RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
-if os.path.exists(RESULTPATH):
-    os.remove(RESULTPATH)
+#if os.path.exists(RESULTPATH):
+#    os.remove(RESULTPATH)
 
-nepochs = 1201
+nepochs = 801
 
 def crossval(loop):
-    for learning_rate in [0.05, 0.02, 0.01, 0.005]:
-        for hidden_depth in [3,4,5,6]:
-            for hidden_factor in [2, 3, 5, 10]:
+    for learning_rate in [0.03, 0.01, 0.003, 0.001]:
+        for hidden_depth in [2,3,4,5]:
+            for hidden_factor in [3,6,10]:
                 print(learning_rate, hidden_depth, hidden_factor)
                 train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,10)
                 model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
                     hidden_depth=hidden_depth)
 
                 losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=25,
-                    device=tc.device("cuda:1"))
+                    device=tc.device("cuda:0"))
 
                 losses[['lr', 'depth', 'neurons', 'loop']] = learning_rate, hidden_depth, hidden_factor, loop
                 

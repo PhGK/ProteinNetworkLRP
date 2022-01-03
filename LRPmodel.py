@@ -176,7 +176,7 @@ class Model(nn.Module):
             R = module.relprop(R)
         return R
 
-def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc.device('cpu')):
+def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc.device('cuda:1')):
     nsamples, nfeatures = train_data.shape
     optimizer = tc.optim.SGD(neuralnet.parameters(), lr=lr, momentum=0.9)
 
@@ -187,6 +187,7 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc
     losses = []
     t1 = time.time()
     for epoch in range(epochs):
+
         trainset = Dataset_train(train_data)
         trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
 
@@ -202,8 +203,8 @@ def train(neuralnet, train_data, test_data, epochs, lr, batch_size=25, device=tc
             optimizer.step()
             
 
-        if epoch in [1, 100, 150, 200, 250, 300, 350, 400, 450,500,550,600,650,700,750,800, 900, 1000, 1100, 1200]:
-
+        if epoch in [0,10,20, 40,60,80, 100, 150, 200, 250, 300, 350, 400, 450,500,550,600,650,700,750,800, 900, 1000, 1100, 1200]:
+            print(epoch)
             neuralnet.eval()
             testset = Dataset_train(test_data)
             testloader = DataLoader(testset, batch_size=test_data.shape[0], shuffle=False)

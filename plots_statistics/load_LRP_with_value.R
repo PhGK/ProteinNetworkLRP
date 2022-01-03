@@ -9,6 +9,9 @@ library(gplots)
 library(pbmcapply)
 library(data.table)
 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
+getwd()
+
 numCores <- detectCores()
 setwd('.') # wd to relprop result files
 RAWPATH = '../results/LRP/raw_data/'
@@ -26,5 +29,6 @@ all_data_ORGAN <- inner_join(ORGANS, all_data, by = c('ID'='sample_name') )
 
 write.csv(all_data_ORGAN,paste0(USEPATH, 'all_data.csv'), row.names=F)
 print(dim(all_data))
+print(length(filenames))
 
 

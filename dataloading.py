@@ -22,7 +22,7 @@ class Dataset_train(Dataset):
         full_data = self.data[idx, :]
         mask = (tc.rand_like(full_data)<p)*1.0
 
-        x_1, x_2 = full_data, 1-full_data
+        x_1, x_2 = full_data.clone(), 1-full_data.clone()
 
 
         x_1[mask==0], x_2[mask==0] = 0, 0
@@ -46,7 +46,7 @@ class Dataset_train_from_pandas(Dataset):
         full_data = self.data_tensor[idx, :]
         mask = (tc.rand_like(full_data)<p)*1.0
 
-        x_1, x_2 = full_data, 1-full_data
+        x_1, x_2 = full_data.clone(), 1-full_data.clone()
 
 
         x_1[mask==0], x_2[mask==0] = 0, 0

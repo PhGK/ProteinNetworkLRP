@@ -1,4 +1,3 @@
-setwd('/mnt/scratch2/mlprot/mlprot_220920')
 library(ggplot2)
 library(stringr)
 library(magrittr)
@@ -17,6 +16,7 @@ library(stats)
 library(xtable)
 library(plyr)
 
+setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 test_data <- fread('../results/LRP/use_data/all_data.csv')
 test_data$LRP <- test_data$LRP %>% abs()
@@ -33,12 +33,13 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-highcorrelation <- correlation %>% filter(corr>0.1)
+highcorrelation <- correlation %>% filter(corr>0.5)
 
 rcorr(for_correlation$y, for_correlation$y_pred)
 
 case_numbers_old <- test_data %>% group_by(ID) %>% dplyr::summarize("Cancer_Type" = max(Cancer_Type))
 summary(as.factor(case_numbers_old$Cancer_Type))
+
 
 test_data <- test_data %>% filter(ID %in% highcorrelation$ID)
 
@@ -52,36 +53,36 @@ number_interactions = 36
 
 ##################
 #symmetrize data
-LRP_dir <- test_data %>% dplyr::select(ID, Cancer_Type, predicting_protein, masked_protein_gene, LRP)
+LRP_dir <- test_data %>% dplyr::select(ID, Cancer_Type, predicting_protein, masked_protein, LRP)
 LRP_trans <- LRP_dir
-colnames(LRP_trans) <- c('ID','Cancer_Type', "masked_protein_gene", "predicting_protein", "tLRP")
+colnames(LRP_trans) <- c('ID','Cancer_Type', "masked_protein", "predicting_protein", "tLRP")
 
 sym_LRP <- left_join(LRP_dir, LRP_trans) %>% mutate("LRP_sym" = 0.5*(LRP+tLRP)) %>% 
-  arrange(desc(LRP_sym)) %>% filter(predicting_protein >=masked_protein_gene) %>% dplyr::select(-c(LRP, tLRP))
+  arrange(desc(LRP_sym)) %>% filter(predicting_protein >=masked_protein) %>% dplyr::select(-c(LRP, tLRP))
 
 sym_highest_LRP <- sym_LRP %>% 
-  group_by(predicting_protein, masked_protein_gene) %>%
+  group_by(predicting_protein, masked_protein) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym)) %>% 
   ungroup() %>%
-  arrange(desc(meanLRP)) %>% dplyr::select(predicting_protein, masked_protein_gene, meanLRP) 
+  arrange(desc(meanLRP)) %>% dplyr::select(predicting_protein, masked_protein, meanLRP) 
 ############################
 ############################
 #compare with reactome
 setwd('../data/')
 adj_react <- read.delim('int_react_147_060418.csv', header = F)  
-colnames(adj_react) <- c("masked_protein_gene", as.character(adj_react$V1))
+colnames(adj_react) <- c("masked_protein", as.character(adj_react$V1))
 adj_react_matrix <- as.matrix(adj_react[,-1])
-rownames(adj_react_matrix) <- as.character(adj_react$masked_protein_gene)
+rownames(adj_react_matrix) <- as.character(adj_react$masked_protein)
 
 # order names alphanumerically
 adj_react_matrix_ordered <- adj_react_matrix[str_order(rownames(adj_react_matrix)), str_order(colnames(adj_react_matrix))]
-adj_react_long <- pivot_longer(adj_react,cols=!masked_protein_gene, names_to = "predicting_protein", values_to = "edge")
+adj_react_long <- pivot_longer(adj_react,cols=!masked_protein, names_to = "predicting_protein", values_to = "edge")
 adj_react_long$predicting_protein <- as.character(adj_react_long$predicting_protein)
-adj_react_long$masked_protein_gene <- as.character(adj_react_long$masked_protein_gene)
+adj_react_long$masked_protein <- as.character(adj_react_long$masked_protein)
 
-adj_react_long_sym <- adj_react_long %>% filter((predicting_protein) > (masked_protein_gene))
+adj_react_long_sym <- adj_react_long %>% filter((predicting_protein) > (masked_protein))
 k = 100
-full_frame <- left_join(adj_react_long_sym, sym_highest_LRP, by =c("masked_protein_gene", "predicting_protein")) %>% 
+full_frame <- left_join(adj_react_long_sym, sym_highest_LRP, by =c("masked_protein", "predicting_protein")) %>% 
   dplyr::arrange(desc(meanLRP)) %>% .[1:k,]
 
 #####
@@ -97,19 +98,19 @@ ncorrect
 
 # filter out phosphorylation variants
 highest_names <- tidyr::extract(sym_highest_LRP, predicting_protein, into ="p", "([^_]*).*", remove = F) %>%
-  tidyr::extract(masked_protein_gene, into ="m", "([^_]*).*", remove = F) %>%
+  tidyr::extract(masked_protein, into ="m", "([^_]*).*", remove = F) %>%
   dplyr::filter(p!=m) %>%
   dplyr::select(-c(p,m)) %>%
   tidyr::extract(predicting_protein, into ="p", "(..).*", remove = F) %>%
-  tidyr::extract(masked_protein_gene, into ="m", "(..).*", remove = F) %>%
+  tidyr::extract(masked_protein, into ="m", "(..).*", remove = F) %>%
   dplyr::filter(p!=m) %>%
   dplyr::select(-c(p,m)) %>%
   ungroup %>%
-  dplyr::select(predicting_protein, masked_protein_gene, meanLRP)
+  dplyr::select(predicting_protein, masked_protein, meanLRP)
 ############################
 #compare with reactome
 
-full_frame <- left_join(adj_react_long_sym, highest_names, by =c("masked_protein_gene", "predicting_protein")) %>% 
+full_frame <- left_join(adj_react_long_sym, highest_names, by =c("masked_protein", "predicting_protein")) %>% 
   dplyr::arrange(desc(meanLRP)) %>% .[1:36,]
 
 #####
@@ -123,36 +124,36 @@ phyper(ncorrect-1, ncorrectall, nfalseall, 36, lower.tail = F, log.p = FALSE)
 ncorrect
 #############################
 
-h1 <- highest_names[1:36,] %>% left_join(adj_react_long_sym, by = c("masked_protein_gene", "predicting_protein")) %>%
+h1 <- highest_names[1:36,] %>% left_join(adj_react_long_sym, by = c("masked_protein", "predicting_protein")) %>%
   dplyr::mutate("predicting_protein" = ifelse(edge==1, paste(predicting_protein, '*', sep=''), predicting_protein))
 
-sym_LRP <- sym_LRP %>% left_join(adj_react_long_sym, by = c("masked_protein_gene", "predicting_protein")) %>%
+sym_LRP <- sym_LRP %>% left_join(adj_react_long_sym, by = c("masked_protein", "predicting_protein")) %>%
   dplyr::mutate("predicting_protein" = ifelse(edge==1, paste(predicting_protein, '*', sep=''), predicting_protein))
-subset_data <- left_join(h1, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein_gene, Cancer_Type) %>%
+subset_data <- left_join(h1, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein, Cancer_Type) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym))
 ########################
 
-medians_IQR <- left_join(h1, sym_LRP) %>%dplyr::select(-Cancer_Type) %>% dplyr::group_by(predicting_protein, masked_protein_gene) %>%
+medians_IQR <- left_join(h1, sym_LRP) %>%dplyr::select(-Cancer_Type) %>% dplyr::group_by(predicting_protein, masked_protein) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym), "IQR" = IQR(LRP_sym))
 
 anova_data <- left_join(h1, sym_LRP)
 
 myanova <- function(id) {
   curr_h <- h1[id,]
-  subset <- anova_data %>% filter(predicting_protein == curr_h$predicting_protein, masked_protein_gene == curr_h$masked_protein_gene)
+  subset <- anova_data %>% filter(predicting_protein == curr_h$predicting_protein, masked_protein == curr_h$masked_protein)
   kruskal_result <- kruskal.test(LRP_sym ~ Cancer_Type, data = subset)
-  c(curr_h$predicting_protein, curr_h$masked_protein_gene, kruskal_result$p.value)
+  c(curr_h$predicting_protein, curr_h$masked_protein, kruskal_result$p.value)
   #kruskal_result
 }
 
 anovavalues <- sapply(seq(36), myanova)
 adj <- p.adjust(anovavalues[3,]) %>% format(digits=2)
 adj_values <- rbind(anovavalues, adj) %>% t() %>% data.frame()
-colnames(adj_values) <- c("predicting_protein", "masked_protein_gene", "pvalue", "adjpvalue")
+colnames(adj_values) <- c("predicting_protein", "masked_protein", "pvalue", "adjpvalue")
 description <- left_join(medians_IQR, adj_values)
-description$ORGAN = "ACC"
+description$Cancer_Type = "ACC"
 ################################
-high_names <- subset_data %>% ungroup %>% group_by(predicting_protein, masked_protein_gene) %>%
+high_names <- subset_data %>% ungroup %>% group_by(predicting_protein, masked_protein) %>%
   filter(meanLRP >= 0.8*max(meanLRP)) %>% ungroup()
 
 plotobject <- ggplot(subset_data, aes(x = Cancer_Type, y =meanLRP, fill = Cancer_Type), color="black") +
@@ -161,7 +162,7 @@ plotobject <- ggplot(subset_data, aes(x = Cancer_Type, y =meanLRP, fill = Cancer
 
 plotobject2 <- plotobject + 
   geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
-  facet_wrap( ~ masked_protein_gene+predicting_protein, nrow = 6) +
+  facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),
@@ -175,10 +176,10 @@ plotobject2 <- plotobject +
   labs(fill = "Cancer")
 
 plotobject2 <- plotobject + 
-  geom_text(data = high_names, aes(label = ORGAN),hjust = -0.3, angle = 90) + 
-  facet_wrap( ~ masked_protein_gene+predicting_protein, nrow = 6) +
-  geom_text(data = description, aes(x = 10, y = 18, label = paste('median: ', round(meanLRP, digits=1), 'IQR: ', round(IQR, digits=1)))) + 
-  geom_text(data = description, aes(x = 10, y = 16, label = paste('p: ', adjpvalue))) + 
+  geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
+  facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
+  geom_text(data = description, aes(x = 10, y = 0.18, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
+  geom_text(data = description, aes(x = 11, y = 0.16, label = paste('p: ', adjpvalue))) + 
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),
@@ -373,9 +374,6 @@ IQR(highest_LRP %>% filter(phosphointeract ==0) %>% .$LRP)
 ggplot(highest_LRP, aes(x = LRP_sym, fill = as.factor(phosphointeract))) + geom_histogram(aes(y = after_stat(density), alpha = 0.1), bins = 500)
 ggplot(highest_LRP %>% arrange(LRP_sym), aes(y = LRP_sym, x = seq(length(LRP_sym)))) + geom_point()
 
-#temp <- data.frame("LRP" = highest_LRP$LRP_sym) %>% dplyr::arrange(LRP)
-#temp["id"] = seq(length(highest_LRP$LRP_sym))
-#ggplot(temp, aes(x = id, y = LRP)) + geom_point()
 
 #########################################################
 #test interactions between c-MET caspase8 parpcleaved Snail ercc1

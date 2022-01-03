@@ -85,8 +85,6 @@ class LRP_Linear(nn.Module):
         Am.grad = None
         Am.requires_grad_(True)
 
-        # print(tc.abs(cpp).sum(), tc.abs(cpm).sum(),tc.abs(cmp).sum(),tc.abs(cmm).sum())
-        # print(tc.abs(cpp), tc.abs(cpm),tc.abs(cmp),tc.abs(cmm))
 
         R_1 = (Ap * cpp).data
         R_2 = (Ap * cpm).data
@@ -185,7 +183,8 @@ class LRP:
 
     def train(self, train_data, test_data, epochs, lr = 0.01, batch_size=25, device=tc.device('cpu')):
         nsamples, nfeatures = train_data.shape
-        optimizer = tc.optim.SGD(self.model.parameters(), lr=lr, momentum=0.9)
+        optimizer = tc.optim.SGD(self.model.parameters(), lr=lr)#, momentum=0.9)
+        #optimizer = tc.optim.Adam(self.model.parameters(), lr=lr)
         criterion = nn.MSELoss()
         self.model.train().to(device)
 
@@ -195,18 +194,19 @@ class LRP:
             trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
 
             for masked_data, mask, full_data in trainloader:
+                optimizer.zero_grad()
                 masked_data = masked_data.to(device)
                 mask = mask.to(device)
                 full_data = full_data.to(device)
 
-                optimizer.zero_grad()
                 pred = self.model(masked_data)
                 loss = criterion(pred[mask==0], full_data[mask==0]) 
                 loss.backward()
                 optimizer.step()
+                #break
 	    
 
-            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400]:
+            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,5000,10000,20000,30000,40000]:
                 print(epoch)
                 self.model.eval()
                 testset = Dataset_train_from_pandas(test_data)
@@ -245,14 +245,15 @@ class LRP:
         R[:,target_id] = pred[:,target_id].clone()
 
         a = self.model.relprop(R)
-        LRP_sum = (a.sum(dim=0))
+        LRP_sum = (a.mean(dim=0))
 
         LRP_unexpanded = 0.5 * (LRP_sum[:LRP_sum.shape[0] // 2] + LRP_sum[LRP_sum.shape[0] // 2:])
 
 
-        mask_sum = mask.sum(dim=0).float()
+        #mask_sum = mask.sum(dim=0).float()
 
-        LRP_scaled = LRP_unexpanded/mask_sum
+        LRP_scaled = LRP_unexpanded#/mask_sum
+        #print(LRP_scaled)
         LRP_scaled = tc.where(tc.isnan(LRP_scaled),tc.tensor(0.0).to(device), LRP_scaled)
 
         return LRP_scaled.cpu().numpy(), error, y , y_pred
