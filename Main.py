@@ -10,10 +10,10 @@ import numpy as np
 from joblib import Parallel, delayed
 
 hidden_factor = 10
-hidden_depth = 3
+hidden_depth = 4
 dropout = 0.0
 gamma = 0.01
-lr = 0.01
+lr = 0.03
 
 njobs=5
 cuda=False

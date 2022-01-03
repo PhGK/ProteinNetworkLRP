@@ -268,7 +268,7 @@ def calc_all_paths(neuralnet, test_data, sample_id, sample_name, featurenames, d
 
         frame = pd.DataFrame({'LRP': LRP_value, 'source_gene': featurenames, 'target_gene': featurenames[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
         end_frame.append(frame)
-        end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + sample_name + str(run) +'.csv'
+        end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + str(sample_name) + str(run) +'.csv'
         if not os.path.exists(result_path + 'raw_data/'):
             os.makedirs(result_path + 'raw_data/')
 

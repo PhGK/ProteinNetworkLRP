@@ -269,7 +269,7 @@ class LRP:
 
             frame = pd.DataFrame({'LRP': LRP_value, 'predicting_protein': feature_names, 'masked_protein': feature_names[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
             end_frame.append(frame)
-            end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + sample_name +'.csv'
+            end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + str(sample_name) +'.csv'
             if not os.path.exists(result_path + 'raw_data/'):
                 os.makedirs(result_path + 'raw_data/')
 

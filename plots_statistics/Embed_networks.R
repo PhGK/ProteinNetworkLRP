@@ -49,7 +49,7 @@ correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
 mediancorrelation <- summary(correlation$corr)[3]
 highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
-#highcorrelation <- correlation %>% filter(corr>0.5)
+#highcorrelation <- correlation %>% filter(corr>0.7)
 
 rcorr(for_correlation$y, for_correlation$y_pred)
 
@@ -58,10 +58,9 @@ summary(as.factor(ID_numbers_old$Cancer_Type))
 
 test_data <- test_data %>% filter(ID %in% highcorrelation$ID)
 ######################################
-
 united_whole_set <- test_data %>% unite('interactions', c("predicting_protein", "masked_protein")) %>%
   dplyr::select(LRP, Cancer_Type, interactions, ID)
-united_whole_set$LRP <- (united_whole_set$LRP - mean(united_whole_set$LRP))/sd(united_whole_set$LRP)
+#united_whole_set$LRP <- (united_whole_set$LRP - mean(united_whole_set$LRP))/sd(united_whole_set$LRP)
 
 united_whole_set_wide <- pivot_wider(united_whole_set, names_from=interactions, values_from = LRP)
 united_whole_matrix <- as.matrix(united_whole_set_wide[,-c(1,2)])
@@ -70,7 +69,7 @@ set.seed(0)
 whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 10)
 
 set.seed(0)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.0, minPts = 9) %>% .$cluster %>% as.factor()
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.0, minPts = 15) %>% .$cluster %>% as.factor()
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -99,7 +98,7 @@ mytsne <- ggplot(tsne_plot) +
         axis.title = element_text(size=20))+
   guides(color = guide_legend(override.aes = list(size = 4)))
 
-png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 1400, height = 1400, res = 150)
+png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 1400, height = 1400, res = 120)
 par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
@@ -148,10 +147,10 @@ seedfunction <- function(clusternumber){
 }
 cutofffunction <- function(clusternumber){
   #for visibility
-  cutoff=0.999
-  if (clusternumber==4) {cutoff = 0.999}
+  cutoff=0.998
+  #if (clusternumber==4) {cutoff = 0.999}
   #if (clusternumber==6) {cutoff = 0.9998}
-  if (clusternumber==8) {cutoff = 0.999}
+  #if (clusternumber==8) {cutoff = 0.999}
   cutoff
 }
 
@@ -182,7 +181,7 @@ average_frame <- current_cluster_data_sym %>% group_by(predicting_protein, maske
 average_matrix <- average_frame[,-1] %>% as.matrix()
 rownames(average_matrix) <- average_frame$predicting_protein
 average_matrix_ordered <- average_matrix[str_order(rownames(average_matrix)), str_order(colnames(average_matrix))]
-cutoff_param <- cutofffunction(current_cluster) #ifelse(current_cluster==4,0.9994, 0.99975)
+cutoff_param <- cutofffunction(current_cluster) 
 cutoff_ID <- average_matrix_ordered %>% abs() %>% quantile(cutoff_param)
 average_matrix_ordered_select <- ifelse(abs(average_matrix_ordered) >= cutoff_ID, average_matrix_ordered,0) 
 
@@ -223,7 +222,7 @@ for (current_ID in current_cluster_position$ID) {
   rownames(IDmatrix) <- IDframe$predicting_protein
   IDmatrix_ordered <- IDmatrix[str_order(rownames(IDmatrix)), str_order(colnames(IDmatrix))]
   
-  cutoff_ID <- IDmatrix_ordered %>% abs() %>% quantile(0.999)
+  cutoff_ID <- IDmatrix_ordered %>% abs() %>% quantile(0.9975)
   IDmatrix_ordered_select <- ifelse(abs(IDmatrix_ordered) >= cutoff_ID, IDmatrix_ordered,0) 
   IDgraph <- graph_from_adjacency_matrix(IDmatrix_ordered_select, mode = "directed", weighted=T)
   
