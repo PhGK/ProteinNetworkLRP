@@ -1,7 +1,7 @@
 from LRPclass import LRP
 
 from dataloading import Dataset_train
-from data_artificial import load_data_cv_from_frame, generate_data_homogeneous
+from data_artificial import load_data_cv_from_frame, generate_data_homogeneous, generate_data_heterogeneous
 import torch as tc
 import sys
 import os
@@ -18,7 +18,7 @@ njobs=2
 cuda=False
 PATH = '.'
 
-datatype = 'homogeneous'
+datatype = 'heterogeneous'
 RESULTPATH = PATH + '/results/artificial/' + datatype + '/'
 nsamples=4000
 
@@ -38,7 +38,7 @@ def calc_all_patients(fold):
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
 
 
-    loss = model.train(train_data, test_data, epochs = 201, lr=0.1)
+    loss = model.train(train_data, test_data, epochs = 501, lr=0.1)
     print(loss)
 
 

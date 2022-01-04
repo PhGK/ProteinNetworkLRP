@@ -153,7 +153,7 @@ class AR():
         return (self.values[warmup:, :], np.array(self.function))
 
 
-    def get_sampled_set(self, size, warmup=100):
+    def get_sampled_set(self, size, warmup=50):
         set = []
 
         for i in range(size):
@@ -193,14 +193,14 @@ def generate_data_homogeneous(datatype, nsamples, nfeatures=32, block_size = (8,
     return df
 
 
-def generate_data_heterogeneous(nsamples, nfeatures=32, block_size=(8, 8), n=4):
-    def block_generator(block_size):
-        x = np.random.mtrand.RandomState(0).binomial(size=block_size[0] * block_size[1], n=1, p=1.0).reshape(
+def generate_data_heterogeneous(datatype, nsamples, nfeatures=32, block_size=(8, 8), n=4):
+    def block_generator(connectivity, block_size):
+        x = np.random.mtrand.RandomState(0).binomial(size=block_size[0] * block_size[1], n=1, p=connectivity).reshape(
             block_size)
         return x * x.transpose()  # symmetrize --> leads to sparsity**2
 
     def specific_network(subgraph):
-        blocks = [block_generator(block_size) if i in subgraph else block_generator(0, block_size) for i
+        blocks = [block_generator(1.0,block_size) if i in subgraph else block_generator(0, block_size) for i
                   in range(matrix_size[0] // block_size[0])]
         block_matrix = np.array(block_diag(*blocks))
         np.fill_diagonal(block_matrix, 1)
@@ -212,7 +212,10 @@ def generate_data_heterogeneous(nsamples, nfeatures=32, block_size=(8, 8), n=4):
 #    full_graph = sparse_graph * 0 + 1
 
     ar_models = [AR(nfeatures, specific_network([i])) for i in range(n)]
-    data = [ar.get_sampled_set(nsamples//n,100)[0] for ar in ar_models]
+    data = np.concatenate([ar.get_sampled_set(nsamples//n,50)[0] for ar in ar_models], axis = 0)
+    print(data.shape)
+    
     df = pd.DataFrame(data)
+
     df.to_csv('./data/artificial_homogeneous.csv')
-    return np.concatenate(data)
+    return df
