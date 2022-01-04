@@ -65,7 +65,7 @@ mean_LRP_sym <- LRP_sym %>%
 
 ##################################################
 # read ractome matrix
-adj_react <- read.delim('int_react_147_060418.csv', header = F)  
+adj_react <- read.delim('../data/int_react_147_060418.csv', header = F)  
 colnames(adj_react) <- c("masked_protein", as.character(adj_react$V1))
 adj_react_matrix <- as.matrix(adj_react[,-1])
 rownames(adj_react_matrix) <- as.character(adj_react$masked_protein)
@@ -82,10 +82,10 @@ full_frame <- left_join(adj_react_long_sym, mean_LRP_sym, by =c("masked_protein"
 
 #######################################
 #prepare correlation matrix
-protein_data <- read.csv('tcpa_data_051017.csv', check.names=F) %>% 
+protein_data <- read.csv('../data/tcpa_data_051017.csv', check.names=F) %>% 
   pivot_longer(!c(ID,Cancer_Type), names_to = "proteins", values_to = "expression") %>%
   filter(proteins %in% (adj_react_long$predicting_protein %>% unique() %>% unlist())) %>%
-  filter(ID %in% (LRP_data_filtered$case %>% unique %>% unlist())) %>%
+  filter(ID %in% (LRP_data_filtered$ID %>% unique %>% unlist())) %>%
   pivot_wider(names_from =proteins, values_from=expression)
 
 for_correlation <- protein_data[,-c(1:2)]
@@ -102,10 +102,10 @@ full_frame_LRP_corr <- left_join(full_frame, corr_data_long)
 #########
 #prepare GENIE matrix
 library(GENIE3)
-protein_data <- read.csv('tcpa_data_051017.csv', check.names=F) %>% 
+protein_data <- read.csv('../data/tcpa_data_051017.csv', check.names=F) %>% 
   pivot_longer(!c(ID,Cancer_Type), names_to = "proteins", values_to = "expression") %>%
   filter(proteins %in% (adj_react_long$predicting_protein %>% unique() %>% unlist())) %>%
-  filter(ID %in% (LRP_data_filtered$case %>% unique %>% unlist())) %>%
+  filter(ID %in% (LRP_data_filtered$ID %>% unique %>% unlist())) %>%
   pivot_wider(names_from =proteins, values_from=expression)
 
 for_correlation <- protein_data[,-c(1:2)]
@@ -123,7 +123,7 @@ genie_data_long <- as.data.frame(genie_matrix_sym) %>% cbind("predicting_protein
 k = 100
 full_frame_all <- left_join(full_frame_LRP_corr, genie_data_long)
 
-full_frame_subset <- full_frame_all %>% dplyr::arrange(desc(correlation)) %>% .[1:k,]
+full_frame_subset <- full_frame_all %>% dplyr::arrange(desc(LRP)) %>% .[1:k,]
 
 
 #####
