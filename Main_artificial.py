@@ -10,9 +10,12 @@ import numpy as np
 from joblib import Parallel, delayed
 
 hidden_factor = 10
-hidden_depth = 4
-dropout = 0.0
+hidden_depth = 2
+dropout = 0.05
 gamma = 0.01
+nepochs = 801
+lr = 0.1
+
 
 njobs=2
 cuda=False
@@ -32,13 +35,17 @@ else:
     print('data not found')
 
 def calc_all_patients(fold):
-    train_data, test_data = load_data_cv_from_frame(df, fold,2)
+    train_data, test_data = load_data_cv_from_frame(df, fold,4)
+
+    if datatype == 'heterogeneous':
+            train_data.to_csv('./data/artificial_heterogeneous_train.csv')
+            test_data.to_csv('./data/artificial_heterogeneous_test.csv')
 
     model = LRP(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
 
 
-    loss = model.train(train_data, test_data, epochs = 501, lr=0.1)
+    loss = model.train(train_data, test_data, epochs = nepochs, lr=lr)
     print(loss)
 
 

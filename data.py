@@ -103,7 +103,7 @@ def load_data_from_frame_overlap(df):
     nsamples, nfeatures = df.shape
     sample_names, feature_names = np.array(df.index), np.array(df.columns)
 
-    np.random.seed(100)
+    np.random.seed(10)
     indices = np.random.permutation(nsamples)
    
     test_indices = indices[:int(indices.shape[0]*0.25)]

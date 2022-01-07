@@ -217,5 +217,5 @@ def generate_data_heterogeneous(datatype, nsamples, nfeatures=32, block_size=(8,
     
     df = pd.DataFrame(data)
 
-    df.to_csv('./data/artificial_homogeneous.csv')
+    df.to_csv('./data/artificial_heterogeneous.csv')
     return df

@@ -46,10 +46,10 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-mediancorrelation <- summary(correlation$corr)[3]
+mediancorrelation <- summary(correlation$corr)[5]
 highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
-#highcorrelation <- correlation %>% filter(corr>0.7)
+highcorrelation <- correlation %>% filter(corr>0.8)
 
 rcorr(for_correlation$y, for_correlation$y_pred)
 
@@ -58,18 +58,25 @@ summary(as.factor(ID_numbers_old$Cancer_Type))
 
 test_data <- test_data %>% filter(ID %in% highcorrelation$ID)
 ######################################
-united_whole_set <- test_data %>% unite('interactions', c("predicting_protein", "masked_protein")) %>%
+test_data_dir <- test_data %>% dplyr::select(ID, predicting_protein, masked_protein, 'dLRP' = LRP, Cancer_Type)
+test_data_trans <- test_data_dir
+colnames(test_data_trans) <- c('ID', 'masked_protein', 'predicting_protein', 'tLRP', 'Cancer_Type')
+test_data_sym <- left_join(test_data_dir, test_data_trans) %>% dplyr::mutate(LRP = 0.5*(abs(dLRP) + abs(tLRP)))
+
+
+united_whole_set <- test_data_sym %>% unite('interactions', c("predicting_protein", "masked_protein")) %>%
   dplyr::select(LRP, Cancer_Type, interactions, ID)
-#united_whole_set$LRP <- (united_whole_set$LRP - mean(united_whole_set$LRP))/sd(united_whole_set$LRP)
+united_whole_set$LRP <- log(1+abs(united_whole_set$LRP*100))
+united_whole_set$LRP <-(united_whole_set$LRP - mean(united_whole_set$LRP))/sd(united_whole_set$LRP)
 
 united_whole_set_wide <- pivot_wider(united_whole_set, names_from=interactions, values_from = LRP)
 united_whole_matrix <- as.matrix(united_whole_set_wide[,-c(1,2)])
 is.na(united_whole_matrix) %>% sum()
 set.seed(0)
-whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 10)
+whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 15)
 
 set.seed(0)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.0, minPts = 15) %>% .$cluster %>% as.factor()
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.7, minPts = 15) %>% .$cluster %>% as.factor() # 2.3, 5
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -81,14 +88,23 @@ tsne_plot <- data.frame(x = whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2]
 #tsne_plot <- data.frame(x = xy[1], y = xy[2], Cancer_Type = united_whole_set_wide$Cancer_Type)
 #cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =xy[1], y = xy[2] )
 
+########################
+#plot_tsne with ellipses
+mytsnecluster <-ggplot(tsne_plot, aes(x=x, y=y)) + 
+  geom_point(data = tsne_plot[dbclusters!=0,], aes(x=x, y=y, color=dbclusters[dbclusters!=0])) + 
+  geom_point(data = tsne_plot[dbclusters==0,], aes(x=x, y=y), color="black") + 
+  stat_ellipse(data = tsne_plot[dbclusters!=0,], aes(color = dbclusters[dbclusters!=0])) + 
+  theme(panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"))
+plot(mytsnecluster)
 ####################
 library(ggforce)
-
+limit = 20
 mytsne <- ggplot(tsne_plot) + 
   geom_point(aes(x=x, y=y, color=Cancer_Type)) + 
-  geom_mark_ellipse(data = tsne_plot[dbclusters!=0 & as.numeric(dbclusters)<22,], aes(x=x, y=y, group = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<22], label = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<22]), 
+  geom_mark_ellipse(data = tsne_plot[dbclusters!=0 & as.numeric(dbclusters)<=limit,], aes(x=x, y=y, group = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit], label = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit]), 
                     label.buffer = unit(0.1, 'mm'), con.cap = 0.01, con.type = "straight", label.fontsize = 30, label.fontface = 'plain') +
-  #geom_label(aes(x=x, y=y, label=Cancer_Type))+
+  geom_label(aes(x=x, y=y, label=Cancer_Type))+
   labs(col="Cancer")+
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
@@ -103,27 +119,23 @@ par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
 
+png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
+par(mar=c(10,10,10,10))
+plot(mytsne)
+dev.off()
 
 
 
-########################
-#plot_tsne with ellipses
-mytsnecluster <-ggplot(tsne_plot, aes(x=x, y=y)) + 
-  geom_point(data = tsne_plot[dbclusters!=0,], aes(x=x, y=y, color=dbclusters[dbclusters!=0])) + 
-  geom_point(data = tsne_plot[dbclusters==0,], aes(x=x, y=y), color="black") + 
-  stat_ellipse(data = tsne_plot[dbclusters!=0,], aes(color = dbclusters[dbclusters!=0])) + 
-  theme(panel.background = element_blank(), 
-        axis.line = element_line(colour = "black"))
-plot(mytsnecluster)
+
 ################
 #find largest clusters
 summary_clusters <- summary(dbclusters[dbclusters!=0]) %>% sort(decreasing = T)
 summary_clusters[1:8]
-
+summary_clusters
 #################
 # generate median position
 mean_frame <- aggregate(test_data$LRP, by = list(masked_protein = test_data$masked_protein, predicting_protein = test_data$predicting_protein), median)
-mean_quantile <- quantile(mean_frame$x, 0.90)
+mean_quantile <- quantile(mean_frame$x, 0.5)
 mean_frame$x[mean_frame$x<mean_quantile] <- 0
 mean_frame_wide <- mean_frame %>% pivot_wider(names_from = masked_protein, values_from = x)
 mean_matrix <- mean_frame_wide[,-1] %>% as.matrix()
@@ -147,8 +159,8 @@ seedfunction <- function(clusternumber){
 }
 cutofffunction <- function(clusternumber){
   #for visibility
-  cutoff=0.998
-  #if (clusternumber==4) {cutoff = 0.999}
+  cutoff=0.9997
+  if (clusternumber==2) {cutoff = 0.999}
   #if (clusternumber==6) {cutoff = 0.9998}
   #if (clusternumber==8) {cutoff = 0.999}
   cutoff
@@ -182,7 +194,20 @@ average_matrix <- average_frame[,-1] %>% as.matrix()
 rownames(average_matrix) <- average_frame$predicting_protein
 average_matrix_ordered <- average_matrix[str_order(rownames(average_matrix)), str_order(colnames(average_matrix))]
 cutoff_param <- cutofffunction(current_cluster) 
-cutoff_ID <- average_matrix_ordered %>% abs() %>% quantile(cutoff_param)
+#cutoff_ID <- average_matrix_ordered %>% abs() %>% quantile(cutoff_param)
+####
+forthresh <- current_cluster_data_sym %>% group_by(predicting_protein, masked_protein) %>%
+  dplyr::summarize("meanLRP"= median(LRP_sym)) %>%
+  arrange(desc(meanLRP))
+
+for (thresh in forthresh$meanLRP) {
+  high_edges <- forthresh %>% filter(meanLRP>=thresh)
+  if (c(high_edges$predicting_protein, high_edges$masked_protein) %>% unique() %>% length() >=7) {
+    cutoff_ID <- thresh
+    break
+  }
+}
+####
 average_matrix_ordered_select <- ifelse(abs(average_matrix_ordered) >= cutoff_ID, average_matrix_ordered,0) 
 
 average_network <- graph_from_adjacency_matrix(average_matrix_ordered_select, weighted=T, mode="directed")
@@ -191,7 +216,7 @@ positions <- cbind(V(average_network),mean_positions)
 vertices2delete <- positions[degree(average_network) ==0,1] %>% as.vector()
 average_network2 <- delete_vertices(average_network, vertices2delete)
 E(average_network2)[E(average_network2)$weight>0]$color <- "black"
-E(average_network2)[E(average_network2)$weight<0]$color <- "blue"
+
 thresh <- degree(average_network2) %>% sort(decreasing = T) %>% .[10] %>% max(c(.,1), na.rm=T) 
 selected_names <- V(average_network2)$name[rev(order(degree(average_network2)))] %>% .[1:min(20, length(.))]
 set.seed(seedfunction(current_cluster))
@@ -203,7 +228,7 @@ par(mar=c(0,11,0,8))
 #plot(average_network,  layout = mean_positions, vertex.label= ifelse(degree(average_network)>=thresh,V(average_network)$name, NA), vertex.size = 0.01, vertex.color = NA, 
 #     edge.width = 4.0, vertex.label.dist=1.0,
 #     vertex.label.cex = 4.5, edge.arrow.width=0.1, edge.arrow.size=0.1, rescale = T)
-plot(average_network2, layout = l, edge.width = 3.0, vertex.color = "white", vertex.size = 0, vertex.label.cex = 2.5, edge.arrow.size=0,
+plot(average_network2, layout = l, edge.width = 3.0, vertex.color = "white", vertex.size = 0, vertex.label.cex = 2.0, edge.arrow.size=0,
      vertex.label= ifelse(V(average_network2)$name %in% selected_names,V(average_network2)$name, NA), vertex.label.family = "Helvetica")
 text(x=-1.7, y=1.2, label=as.character(current_cluster), cex=5) #x=-1.3, y=1.2, cex=5
 dev.off()
@@ -222,7 +247,7 @@ for (current_ID in current_cluster_position$ID) {
   rownames(IDmatrix) <- IDframe$predicting_protein
   IDmatrix_ordered <- IDmatrix[str_order(rownames(IDmatrix)), str_order(colnames(IDmatrix))]
   
-  cutoff_ID <- IDmatrix_ordered %>% abs() %>% quantile(0.9975)
+  cutoff_ID <- IDmatrix_ordered %>% abs() %>% quantile(0.999)
   IDmatrix_ordered_select <- ifelse(abs(IDmatrix_ordered) >= cutoff_ID, IDmatrix_ordered,0) 
   IDgraph <- graph_from_adjacency_matrix(IDmatrix_ordered_select, mode = "directed", weighted=T)
   
@@ -247,7 +272,7 @@ scale_it <- function(x,low,high) {
 
 }
 
-image_size = 0.17 # 0.15
+image_size = 0.14 # 0.15
 current_position_normalized <- current_cluster_position %>% mutate("x" = scale_it(x,0.5*image_size,1-0.5*image_size), "y" = scale_it(y,0.5*image_size,1-0.5*image_size))
 
 png(paste('./figures/temp/','cluster_',current_cluster ,'.png', sep=""), width = 2000, height = 2000, res=200)
@@ -291,7 +316,7 @@ marginplots <- function(selCancer_Type) {
     geom_point(alpha = 0.0) + 
     geom_line(aes(color = ID, group = ID), show.legend = F) +
     ggtitle(selCancer_Type) +
-    #ylim(0,6)+ 
+    ylim(0,0.7)+ 
     xlab('Interactions')+
     theme_bw()+
     scale_x_continuous(breaks = pretty_breaks())

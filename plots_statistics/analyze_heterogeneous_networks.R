@@ -41,14 +41,14 @@ LRP_data <- left_join(LRP_data_d, LRP_data_t, by = c("predicting_protein", "mask
 #specifiy number of samples per row
 numberpresample = 15 
 sample_names <- LRP_data$sample_name %>%unique()
-set.seed(0)
-group1 <- sample(sample_names[sample_names < 1000], 15)
 set.seed(1)
-group2 <- sample(sample_names[sample_names >= 1000 & sample_names < 2000], 15)
+group1 <- sample(sample_names[sample_names < 1000], numberpresample)
 set.seed(2)
-group3 <- sample(sample_names[sample_names >= 2000 & sample_names < 3000], 15)
+group2 <- sample(sample_names[sample_names >= 1000 & sample_names < 2000], numberpresample)
 set.seed(3)
-group4 <- sample(sample_names[sample_names >= 3000 & sample_names < 4000], 15)
+group3 <- sample(sample_names[sample_names >= 2000 & sample_names < 3000], numberpresample)
+set.seed(4)
+group4 <- sample(sample_names[sample_names >= 3000 & sample_names < 4000], numberpresample)
 
 #add group variable and select sample_names for display
 LRP_data_sel  <- LRP_data %>%

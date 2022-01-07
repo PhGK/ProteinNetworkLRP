@@ -19,7 +19,7 @@ library(plyr)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 test_data <- fread('../results/LRP/use_data/all_data.csv')
-test_data$LRP <- test_data$LRP %>% abs()
+test_data$LRP <- test_data$LRP %>% abs() 
 ##################
 ##############################################################################################################################
 #load ground truth data
@@ -170,7 +170,7 @@ plotobject2 <- plotobject +
         axis.title = element_text(size=15),
         legend.text = element_text(size=15),
         legend.title = element_text(size=18))+
-  scale_y_continuous(expand= expansion(c(0,0.05)))+
+  #scale_y_continuous(expand= expansion(c(0,0.05)))+
   ylab("median LRP")+
   xlab("Cancer")+
   labs(fill = "Cancer")
@@ -178,8 +178,8 @@ plotobject2 <- plotobject +
 plotobject2 <- plotobject + 
   geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
-  geom_text(data = description, aes(x = 10, y = 0.12, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
-  geom_text(data = description, aes(x = 11, y = 0.10, label = paste('p: ', adjpvalue))) + 
+  geom_text(data = description, aes(x = 10, y = 0.10, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
+  geom_text(data = description, aes(x = 11, y = 0.09, label = paste('p: ', adjpvalue))) + 
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),

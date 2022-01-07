@@ -10,10 +10,11 @@ import numpy as np
 from joblib import Parallel, delayed
 
 hidden_factor = 10
-hidden_depth = 4
-dropout = 0.0
+hidden_depth = 2
+dropout = 0.05
 gamma = 0.01
-lr = 0.03
+lr = 0.1
+nepochs=801
 
 njobs=5
 cuda=False
@@ -35,13 +36,14 @@ def calc_all_patients(fold):
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
 
 
-    loss = model.train(train_data, test_data, epochs=601, lr=lr)
+    loss = model.train(train_data, test_data, epochs=801, lr=lr)
     print(loss)
 
 
     #for sample_id, sample_name in enumerate(test_data.index):
     #    model.compute_network(test_data,sample_name, sample_id,RESULTPATH,device = tc.device("cuda:0" if cuda else "cpu") )
 
+    print('computing LRP...')
     Parallel(n_jobs=njobs)(delayed(model.compute_network)(test_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")) 
         for sample_id, sample_name in enumerate(test_data.index))
 

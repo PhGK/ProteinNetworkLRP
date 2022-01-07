@@ -15,8 +15,8 @@ PATH = '.'
 
 model_path = PATH + '/results/crossvalidation/models/'
 RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
-#if os.path.exists(RESULTPATH):
-#    os.remove(RESULTPATH)
+if os.path.exists(RESULTPATH):
+    os.remove(RESULTPATH)
 
 nepochs = 801
 
@@ -46,5 +46,5 @@ def crossval(loop):
                 losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
 
 
-Parallel(n_jobs=5)(delayed(crossval)(loop) for loop in range(10))
+Parallel(n_jobs=1)(delayed(crossval)(loop) for loop in range(10))
 
