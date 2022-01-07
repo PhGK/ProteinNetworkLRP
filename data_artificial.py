@@ -189,7 +189,7 @@ def generate_data_homogeneous(datatype, nsamples, nfeatures=32, block_size = (8,
     ar_model = AR(nfeatures, specific_network([0, 1, 2, 3]))
     data = ar_model.get_sampled_set(nsamples, 50)[0]
     df = pd.DataFrame(data)
-    df.to_csv('./results/artificial/artificial_homogeneous.csv')
+    df.to_csv('./data/artificial_homogeneous.csv')
     return df
 
 
@@ -217,5 +217,5 @@ def generate_data_heterogeneous(datatype, nsamples, nfeatures=32, block_size=(8,
     
     df = pd.DataFrame(data)
 
-    df.to_csv('./results/artificial/artificial_heterogeneous.csv')
+    df.to_csv('./data/artificial_heterogeneous.csv')
     return df
