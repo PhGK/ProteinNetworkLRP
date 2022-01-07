@@ -1,3 +1,6 @@
 /results/
 /plots_statistics/figures/
 /plots_statistics/use_data/
+
+!plots_statistics/.gitkeep
+!results/.gitkeep

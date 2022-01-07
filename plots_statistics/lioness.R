@@ -10,9 +10,9 @@ library(parallel)
 library(tidyr)
 library(pROC)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-
-trainset <- fread('../results/artificial//artificial_heterogeneous_train.csv')[-1,-1]
-testset <- fread('../results/artificial/artificial_heterogeneous_test.csv')[-1,-1]
+read.csv('../data/')
+trainset <- fread('../data/artficial_heterogeneous_train.csv')[-1,-1]
+testset <- fread('../data/artficial_heterogeneous_test.csv')[-1,-1]
 
 
 subset <- trainset[1:2000,] %>% as.matrix() %>% t()
@@ -41,9 +41,9 @@ infer <- function(i){
   values
 }
 
-results <- sapply(seq(2000), infer) %>% cbind("c"=sepvalues$c, "d"=sepvalues$d, .) %>% data.frame()
+results <- sapply(seq(1000), infer) %>% cbind("c"=sepvalues$c, "d"=sepvalues$d, .) %>% data.frame()
 
-write.table(results,'~/PycharmProjects/Proteomics/data/lioness_result.csv', sep=",", row.names=F)
+write.table(results,'../plots_statistics/figures/lioness_result.csv', sep=",", row.names=F)
 ggplot(results, aes(c, d, fill= V700)) + 
   geom_tile()
 
