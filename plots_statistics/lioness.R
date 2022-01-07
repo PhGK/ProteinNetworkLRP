@@ -11,8 +11,8 @@ library(tidyr)
 library(pROC)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
-trainset <- fread('../data/artificial_heterogeneous_train.csv')[-1,-1]
-testset <- fread('../data/artificial_heterogeneous_test.csv')[-1,-1]
+trainset <- fread('../results/artificial//artificial_heterogeneous_train.csv')[-1,-1]
+testset <- fread('../results/artificial/artificial_heterogeneous_test.csv')[-1,-1]
 
 
 subset <- trainset[1:2000,] %>% as.matrix() %>% t()
