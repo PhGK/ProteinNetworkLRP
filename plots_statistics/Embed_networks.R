@@ -46,8 +46,8 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-mediancorrelation <- summary(correlation$corr)[5]
-highcorrelation <- correlation %>% filter(corr>mediancorrelation)
+#mediancorrelation <- summary(correlation$corr)[5]
+#highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
 highcorrelation <- correlation %>% filter(corr>0.8)
 
@@ -76,7 +76,7 @@ set.seed(0)
 whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 15)
 
 set.seed(0)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.7, minPts = 15) %>% .$cluster %>% as.factor() # 2.3, 5
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.7, minPts = 15) %>% .$cluster %>% as.factor() # 3.7, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -104,7 +104,7 @@ mytsne <- ggplot(tsne_plot) +
   geom_point(aes(x=x, y=y, color=Cancer_Type)) + 
   geom_mark_ellipse(data = tsne_plot[dbclusters!=0 & as.numeric(dbclusters)<=limit,], aes(x=x, y=y, group = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit], label = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit]), 
                     label.buffer = unit(0.1, 'mm'), con.cap = 0.01, con.type = "straight", label.fontsize = 30, label.fontface = 'plain') +
-  geom_label(aes(x=x, y=y, label=Cancer_Type))+
+  #geom_label(aes(x=x, y=y, label=Cancer_Type))+
   labs(col="Cancer")+
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),

@@ -28,6 +28,27 @@ class Dataset_train(Dataset):
         x_1[mask==0], x_2[mask==0] = 0, 0
         return tc.cat((x_1, x_2), axis = 0), mask, full_data
 
+class Dataset_test(Dataset):
+    def __init__(self, data):
+        self.nsamples, self.nfeatures = data.shape
+        self.data = data
+        self.l = data.shape[0]
+
+    def __len__(self):
+        return self.l
+
+    def __getitem__(self, idx):
+        p = 0.5
+
+        full_data = self.data[idx, :]
+        mask = (tc.rand_like(full_data)<p)*1.0
+
+        x_1, x_2 = full_data.clone(), 1-full_data.clone()
+
+
+        x_1[mask==0], x_2[mask==0] = 0, 0
+        return tc.cat((x_1, x_2), axis = 0), mask, full_data
+
 
 class Dataset_train_from_pandas(Dataset):
     def __init__(self, df, interval =(0.01, 0.99)):

@@ -144,6 +144,7 @@ dev.off()
 
 ############
 library(Rtsne)
+library(tidyr)
 LRP_data_wide <- LRP_data %>% mutate("grid_" = 100*as.numeric(predicting_protein) + 1*as.numeric(masked_protein),"sample_group" = as.numeric(sample_name) %/%1000+1) %>%
   dplyr::select(grid_, LRP, sample_name, sample_group) %>%
   pivot_wider(names_from ="grid_", values_from=LRP)
@@ -153,9 +154,11 @@ normalize <- function(x) {
   (x-mean(x))/sd(x)
   }
 
-LRP_data_matrix <- log(LRP_data_wide+1)
+LRP_data_matrix <- LRP_data_wide #log(LRP_data_wide+0.01)
 #LRP_data_matrix <- apply(LRP_data_wide[,-c(1,2)],1,normalize) 
-tsne<- Rtsne(as.matrix(LRP_data_matrix), check_duplicates = F, perplexity = 30)
+tsne<- Rtsne(as.matrix(LRP_data_matrix[,-c(1:2)]), check_duplicates = F, perplexity = 15)
+
+
 tsne_plot <- data.frame(x = tsne$Y[,1], y = tsne$Y[,2], sample_group = LRP_data_wide$sample_group)
 
 art_tsne <- ggplot(tsne_plot, aes(x=x, y=y, color = as.factor(sample_group))) + geom_point() + 

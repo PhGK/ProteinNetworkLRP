@@ -10,7 +10,6 @@ library(parallel)
 library(tidyr)
 library(pROC)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-read.csv('../data/')
 trainset <- fread('../data/artficial_heterogeneous_train.csv')[-1,-1]
 testset <- fread('../data/artficial_heterogeneous_test.csv')[-1,-1]
 
@@ -49,14 +48,14 @@ ggplot(results, aes(c, d, fill= V700)) +
 
 #####################################
 
-results <- fread('~/PycharmProjects/Proteomics/data/lioness_result.csv')
-colnames(results)[3:2002] <- 1:2000
+results <- fread('../plots_statistics/figures/lioness_result.csv')
+colnames(results)[3:1002] <- 1:1000
 #results$sample_id <- as.numeric(rownames(results))
 
 results_long <- pivot_longer(results, cols = !c("c", "d"), names_to = "sample", values_to = "inf_interaction") 
 results_long$inf_interaction <- abs(results_long$inf_interaction)
 results_long$sample <- as.numeric(results_long$sample)
-results_long$interaction_group <- (results_long$sample-1) %/% 500+1
+results_long$interaction_group <- (results_long$sample-1) %/% 1000+1
 
 
 results_long_struc <- results_long %>% 
@@ -74,7 +73,7 @@ spec <- results_long_struc %>%
 rocplot <- roc(spec$ground_truth, spec$inf_interaction,  ci=TRUE, plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, print.auc=TRUE)
 
 
-png(paste('/mnt/scratch2/mlprot/single_sample_exp/plots_statistics/figures/single_roc_plot', '.png'), width = 1200, height = 1200)
+png(paste('./figures/single_roc_plot', '.png'), width = 1200, height = 1200)
 plot.roc(rocplot, ci=TRUE,  auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, print.auc=TRUE, print.auc.cex=4, print.auc.x=0.7)
 
 dev.off()
