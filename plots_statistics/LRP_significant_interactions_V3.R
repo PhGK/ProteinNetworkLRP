@@ -41,7 +41,7 @@ case_numbers_old <- test_data %>% group_by(ID) %>% dplyr::summarize("Cancer_Type
 summary(as.factor(case_numbers_old$Cancer_Type))
 
 
-test_data <- test_data %>% filter(ID %in% highcorrelation$ID)
+#test_data <- test_data %>% filter(ID %in% highcorrelation$ID)
 
 ########################################
 #facet wrap of highest values

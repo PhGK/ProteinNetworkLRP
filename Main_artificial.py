@@ -38,7 +38,7 @@ def calc_all_patients(fold):
     train_data, test_data = load_data_cv_from_frame(df, fold,4)
 
     if datatype == 'heterogeneous':
-            train_data.to_csv('./results/artificial/data/artificial_heterogeneous_train.csv')
+            train_data.to_csv('./results/artificial/artificial_heterogeneous_train.csv')
             test_data.to_csv('./results/artificial/artificial_heterogeneous_test.csv')
 
     model = LRP(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,

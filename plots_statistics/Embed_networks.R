@@ -46,10 +46,10 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-#mediancorrelation <- summary(correlation$corr)[5]
+#mediancorrelation <- summary(correlation$corr)[3]
 #highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
-highcorrelation <- correlation %>% filter(corr>0.8)
+highcorrelation <- correlation %>% filter(corr>0.7)
 
 rcorr(for_correlation$y, for_correlation$y_pred)
 
@@ -61,22 +61,31 @@ test_data <- test_data %>% filter(ID %in% highcorrelation$ID)
 test_data_dir <- test_data %>% dplyr::select(ID, predicting_protein, masked_protein, 'dLRP' = LRP, Cancer_Type)
 test_data_trans <- test_data_dir
 colnames(test_data_trans) <- c('ID', 'masked_protein', 'predicting_protein', 'tLRP', 'Cancer_Type')
-test_data_sym <- left_join(test_data_dir, test_data_trans) %>% dplyr::mutate(LRP = 0.5*(abs(dLRP) + abs(tLRP)))
+test_data_sym <- left_join(test_data_dir, test_data_trans) %>% dplyr::mutate(LRP = 0.5*(abs(dLRP) + abs(tLRP))) %>%
+  filter(predicting_protein > masked_protein)
+
 
 
 united_whole_set <- test_data_sym %>% unite('interactions', c("predicting_protein", "masked_protein")) %>%
   dplyr::select(LRP, Cancer_Type, interactions, ID)
-united_whole_set$LRP <- log(1+abs(united_whole_set$LRP*100))
-united_whole_set$LRP <-(united_whole_set$LRP - mean(united_whole_set$LRP))/sd(united_whole_set$LRP)
+
+#united_whole_set$LRP <- log(1+abs(united_whole_set$LRP*100))
+#united_whole_set$LRP <-(united_whole_set$LRP - mean(united_whole_set$LRP))/sd(united_whole_set$LRP)
 
 united_whole_set_wide <- pivot_wider(united_whole_set, names_from=interactions, values_from = LRP)
 united_whole_matrix <- as.matrix(united_whole_set_wide[,-c(1,2)])
+#write.csv(united_whole_set_wide, '../results/LRP/use_data/tsne_matrix.csv')
+
 is.na(united_whole_matrix) %>% sum()
+#####
+distances <- dist(united_whole_matrix, method = 'manhattan')
 set.seed(0)
-whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 15)
+whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
+######
+#whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 15)
 
 set.seed(0)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.7, minPts = 15) %>% .$cluster %>% as.factor() # 3.7, 15
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.0, minPts = 15) %>% .$cluster %>% as.factor() # 3.7, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -119,10 +128,10 @@ par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
 
-png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
-par(mar=c(10,10,10,10))
-plot(mytsne)
-dev.off()
+#png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
+#par(mar=c(10,10,10,10))
+#plot(mytsne)
+#dev.off()
 
 
 
