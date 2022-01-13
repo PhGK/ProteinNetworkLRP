@@ -84,8 +84,8 @@ whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=
 ######
 #whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 15)
 
-set.seed(0)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.0, minPts = 15) %>% .$cluster %>% as.factor() # 3.7, 15
+set.seed(1)
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.1, minPts = 15) %>% .$cluster %>% as.factor() # 2.0, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -128,10 +128,10 @@ par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
 
-#png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
-#par(mar=c(10,10,10,10))
-#plot(mytsne)
-#dev.off()
+png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
+par(mar=c(10,10,10,10))
+plot(mytsne)
+dev.off()
 
 
 
@@ -175,6 +175,8 @@ cutofffunction <- function(clusternumber){
   cutoff
 }
 
+library(dplyr)
+library(igraph)
 dir.create('./figures/temp/')
 nclusters <- dbclusters %>% unique %>% length()-1
 for (current_cluster in seq(nclusters)){
@@ -207,7 +209,7 @@ cutoff_param <- cutofffunction(current_cluster)
 ####
 forthresh <- current_cluster_data_sym %>% group_by(predicting_protein, masked_protein) %>%
   dplyr::summarize("meanLRP"= median(LRP_sym)) %>%
-  arrange(desc(meanLRP))
+  dplyr::arrange(desc(meanLRP))
 
 for (thresh in forthresh$meanLRP) {
   high_edges <- forthresh %>% filter(meanLRP>=thresh)
@@ -222,12 +224,12 @@ average_matrix_ordered_select <- ifelse(abs(average_matrix_ordered) >= cutoff_ID
 average_network <- graph_from_adjacency_matrix(average_matrix_ordered_select, weighted=T, mode="directed")
 positions <- cbind(V(average_network),mean_positions)
 #reduced_positions <- positions[degree(average_network) >0,]
-vertices2delete <- positions[degree(average_network) ==0,1] %>% as.vector()
+vertices2delete <- positions[igraph::degree(average_network) ==0,1] %>% as.vector()
 average_network2 <- delete_vertices(average_network, vertices2delete)
 E(average_network2)[E(average_network2)$weight>0]$color <- "black"
 
-thresh <- degree(average_network2) %>% sort(decreasing = T) %>% .[10] %>% max(c(.,1), na.rm=T) 
-selected_names <- V(average_network2)$name[rev(order(degree(average_network2)))] %>% .[1:min(20, length(.))]
+thresh <- igraph::degree(average_network2) %>% sort(decreasing = T) %>% .[10] %>% max(c(.,1), na.rm=T) 
+selected_names <- V(average_network2)$name[rev(order(igraph::degree(average_network2)))] %>% .[1:min(20, length(.))]
 set.seed(seedfunction(current_cluster))
 l = layout_in_circle(average_network2, sample(seq(length(V(average_network2)))))
 png(paste('./figures/temp/average_ID_', current_cluster, '.png', sep=""), width=2000, height = 1700, res=200)

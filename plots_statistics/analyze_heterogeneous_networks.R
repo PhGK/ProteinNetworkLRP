@@ -156,7 +156,12 @@ normalize <- function(x) {
 
 LRP_data_matrix <- LRP_data_wide #log(LRP_data_wide+0.01)
 #LRP_data_matrix <- apply(LRP_data_wide[,-c(1,2)],1,normalize) 
-tsne<- Rtsne(as.matrix(LRP_data_matrix[,-c(1:2)]), check_duplicates = F, perplexity = 15)
+##############
+distances <- dist(LRP_data_matrix[,-c(1:2)], method = 'manhattan')
+set.seed(0)
+tsne <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
+############
+#tsne<- Rtsne(as.matrix(LRP_data_matrix[,-c(1:2)]), check_duplicates = F, perplexity = 15)
 
 
 tsne_plot <- data.frame(x = tsne$Y[,1], y = tsne$Y[,2], sample_group = LRP_data_wide$sample_group)

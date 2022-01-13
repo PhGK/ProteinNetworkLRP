@@ -58,13 +58,13 @@ LRP_trans <- LRP_dir
 colnames(LRP_trans) <- c('ID','Cancer_Type', "masked_protein", "predicting_protein", "tLRP")
 
 sym_LRP <- left_join(LRP_dir, LRP_trans) %>% mutate("LRP_sym" = 0.5*(LRP+tLRP)) %>% 
-  arrange(desc(LRP_sym)) %>% filter(predicting_protein >=masked_protein) %>% dplyr::select(-c(LRP, tLRP))
+  dplyr::arrange(desc(LRP_sym)) %>% filter(predicting_protein >=masked_protein) %>% dplyr::select(-c(LRP, tLRP))
 
 sym_highest_LRP <- sym_LRP %>% 
   group_by(predicting_protein, masked_protein) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym)) %>% 
   ungroup() %>%
-  arrange(desc(meanLRP)) %>% dplyr::select(predicting_protein, masked_protein, meanLRP) 
+  dplyr::arrange(desc(meanLRP)) %>% dplyr::select(predicting_protein, masked_protein, meanLRP) 
 ############################
 ############################
 #compare with reactome
@@ -200,12 +200,21 @@ plotobject2
 #########################################################################################
 h2 <- highest_names[37:72,]
 
-subset <- left_join(h2, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein, ORGAN) %>%
+sym_LRP <- left_join(LRP_dir, LRP_trans) %>% mutate("LRP_sym" = 0.5*(LRP+tLRP)) %>% 
+  dplyr::arrange(desc(LRP_sym)) %>% filter(predicting_protein >=masked_protein) %>% dplyr::select(-c(LRP, tLRP))
+
+sym_highest_LRP <- sym_LRP %>% 
+  group_by(predicting_protein, masked_protein) %>%
+  dplyr::summarize("meanLRP" = median(LRP_sym)) %>% 
+  ungroup() %>%
+  dplyr::arrange(desc(meanLRP)) %>% dplyr::select(predicting_protein, masked_protein, meanLRP) 
+
+subset <- left_join(h2, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein, Cancer_Type) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym))
 
 ######
 
-medians_IQR <- left_join(h2, sym_LRP) %>%dplyr::select(-ORGAN) %>% dplyr::group_by(predicting_protein, masked_protein) %>%
+medians_IQR <- left_join(h2, sym_LRP) %>%dplyr::select(-Cancer_Type) %>% dplyr::group_by(predicting_protein, masked_protein) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym), "IQR" = IQR(LRP_sym))
 
 anova_data <- left_join(h2, sym_LRP)
@@ -213,7 +222,7 @@ anova_data <- left_join(h2, sym_LRP)
 myanova <- function(id) {
   curr_h <- h2[id,]
   subset <- anova_data %>% filter(predicting_protein == curr_h$predicting_protein, masked_protein == curr_h$masked_protein)
-  kruskal_result <- kruskal.test(LRP_sym ~ ORGAN, data = subset)
+  kruskal_result <- kruskal.test(LRP_sym ~ Cancer_Type, data = subset)
   c(curr_h$predicting_protein, curr_h$masked_protein, kruskal_result$p.value)
   #kruskal_result
 }
@@ -223,7 +232,7 @@ adj <- p.adjust(anovavalues[3,]) %>% format(digits=2)
 adj_values <- rbind(anovavalues, adj) %>% t() %>% data.frame()
 colnames(adj_values) <- c("predicting_protein", "masked_protein", "pvalue", "adjpvalue")
 description <- left_join(medians_IQR, adj_values)
-description$ORGAN = "ACC"
+description$Cancer_Type = "ACC"
 
 
 
@@ -231,12 +240,12 @@ description$ORGAN = "ACC"
 high_names <- subset %>% ungroup %>% group_by(predicting_protein, masked_protein) %>%
   filter(meanLRP >= 0.8*max(meanLRP)) %>% ungroup()
 
-plotobject <- ggplot(subset, aes(x = ORGAN, y =meanLRP, fill = ORGAN), color="black") +
+plotobject <- ggplot(subset, aes(x = Cancer_Type, y =meanLRP, fill = Cancer_Type), color="black") +
   #geom_line(aes(group=1)) 
   geom_bar(stat="identity", color="black") #geom_boxplot(outlier.shape = NA) 
 
 plotobject2 <- plotobject + 
-  geom_text(data = high_names, aes(label = ORGAN),hjust = -0.3, angle = 90) + 
+  geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
   theme_bw()+
   theme(axis.text.x = element_blank(), 
@@ -245,16 +254,16 @@ plotobject2 <- plotobject +
         axis.title = element_text(size=15),
         legend.text = element_text(size=15),
         legend.title = element_text(size=18))+
-  scale_y_continuous(expand= expansion(c(0,0.6)))+
+  #scale_y_continuous(expand= expansion(c(0,0.05)))+
   ylab("median LRP")+
   xlab("Cancer")+
   labs(fill = "Cancer")
 
 plotobject2 <- plotobject + 
-  geom_text(data = high_names, aes(label = ORGAN),hjust = -0.3, angle = 90) + 
+  geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
-  geom_text(data = description, aes(x = 10, y = 18, label = paste('median: ', round(meanLRP, digits=1), 'IQR: ', round(IQR, digits=1)))) + 
-  geom_text(data = description, aes(x = 10, y = 16, label = paste('p: ', adjpvalue))) + 
+  geom_text(data = description, aes(x = 10, y = 0.10, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
+  geom_text(data = description, aes(x = 11, y = 0.09, label = paste('p: ', adjpvalue))) + 
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),
@@ -273,12 +282,12 @@ dev.off()
 ###
 h3 <- highest_names[73:108,]
 
-subset <- left_join(h3, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein, ORGAN) %>%
+subset <- left_join(h3, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein, Cancer_Type) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym))
 
 ######
 
-medians_IQR <- left_join(h3, sym_LRP) %>%dplyr::select(-ORGAN) %>% dplyr::group_by(predicting_protein, masked_protein) %>%
+medians_IQR <- left_join(h3, sym_LRP) %>%dplyr::select(-Cancer_Type) %>% dplyr::group_by(predicting_protein, masked_protein) %>%
   dplyr::summarize("meanLRP" = median(LRP_sym), "IQR" = IQR(LRP_sym))
 
 anova_data <- left_join(h3, sym_LRP)
@@ -286,7 +295,7 @@ anova_data <- left_join(h3, sym_LRP)
 myanova <- function(id) {
   curr_h <- h3[id,]
   subset <- anova_data %>% filter(predicting_protein == curr_h$predicting_protein, masked_protein == curr_h$masked_protein)
-  kruskal_result <- kruskal.test(LRP_sym ~ ORGAN, data = subset)
+  kruskal_result <- kruskal.test(LRP_sym ~ Cancer_Type, data = subset)
   c(curr_h$predicting_protein, curr_h$masked_protein, kruskal_result$p.value)
   #kruskal_result
 }
@@ -296,7 +305,7 @@ adj <- p.adjust(anovavalues[3,]) %>% format(digits=2)
 adj_values <- rbind(anovavalues, adj) %>% t() %>% data.frame()
 colnames(adj_values) <- c("predicting_protein", "masked_protein", "pvalue", "adjpvalue")
 description <- left_join(medians_IQR, adj_values)
-description$ORGAN = "ACC"
+description$Cancer_Type = "ACC"
 
 
 
@@ -305,13 +314,13 @@ description$ORGAN = "ACC"
 high_names <- subset %>% ungroup %>% group_by(predicting_protein, masked_protein) %>%
   filter(meanLRP >= 0.8*max(meanLRP)) %>% ungroup()
 
-plotobject <- ggplot(subset, aes(x = ORGAN, y =meanLRP, fill = ORGAN), color="black") +
+plotobject <- ggplot(subset, aes(x = Cancer_Type, y =meanLRP, fill = Cancer_Type), color="black") +
   #geom_line(aes(group=1)) 
   geom_bar(stat="identity", color="black") #geom_boxplot(outlier.shape = NA) 
 
 plotobject2 <- plotobject + 
-  geom_text(data = high_names, aes(label = ORGAN),hjust = -0.3, angle = 90) + 
-  facet_wrap( ~ masked_protein+predicting_protein, ncol = 6) +
+  geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
+  facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),
@@ -319,16 +328,16 @@ plotobject2 <- plotobject +
         axis.title = element_text(size=15),
         legend.text = element_text(size=15),
         legend.title = element_text(size=18))+
-  scale_y_continuous(expand= expansion(c(0,0.6)))+
+  #scale_y_continuous(expand= expansion(c(0,0.05)))+
   ylab("median LRP")+
   xlab("Cancer")+
   labs(fill = "Cancer")
 
 plotobject2 <- plotobject + 
-  geom_text(data = high_names, aes(label = ORGAN),hjust = -0.3, angle = 90) + 
+  geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
-  geom_text(data = description, aes(x = 10, y = 18, label = paste('median: ', round(meanLRP, digits=1), 'IQR: ', round(IQR, digits=1)))) + 
-  geom_text(data = description, aes(x = 10, y = 16, label = paste('p: ', adjpvalue))) + 
+  geom_text(data = description, aes(x = 10, y = 0.10, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
+  geom_text(data = description, aes(x = 11, y = 0.09, label = paste('p: ', adjpvalue))) + 
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),
@@ -342,7 +351,7 @@ plotobject2 <- plotobject +
   labs(fill = "Cancer")
 
 png("/mnt/scratch2/mlprot/mlprot_220920/plots_statistics/figures/highest_wrap3.png",width = 1000, height = 1000)
-plotobject2
+plotobject2 # size: 15, 15
 dev.off()
 
 
