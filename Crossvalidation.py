@@ -18,12 +18,13 @@ RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
 if os.path.exists(RESULTPATH):
     os.remove(RESULTPATH)
 
-nepochs = 801
+nepochs = 1201
+njobs = 10
 
 def crossval(loop):
-    for learning_rate in [0.03, 0.01, 0.003, 0.001]:
+    for learning_rate in [0.3, 0.1, 0.03, 0.01]:
         for hidden_depth in [2,3,4,5]:
-            for hidden_factor in [3,6,10]:
+            for hidden_factor in [5,10]:
                 print(learning_rate, hidden_depth, hidden_factor)
                 train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,10)
                 model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
@@ -46,5 +47,5 @@ def crossval(loop):
                 losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
 
 
-Parallel(n_jobs=1)(delayed(crossval)(loop) for loop in range(10))
+Parallel(n_jobs=njobs)(delayed(crossval)(loop) for loop in range(10))
 

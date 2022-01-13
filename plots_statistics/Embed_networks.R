@@ -283,7 +283,7 @@ scale_it <- function(x,low,high) {
 
 }
 
-image_size = 0.14 # 0.15
+image_size = 0.12 # 0.15
 current_position_normalized <- current_cluster_position %>% mutate("x" = scale_it(x,0.5*image_size,1-0.5*image_size), "y" = scale_it(y,0.5*image_size,1-0.5*image_size))
 
 png(paste('./figures/temp/','cluster_',current_cluster ,'.png', sep=""), width = 2000, height = 2000, res=200)

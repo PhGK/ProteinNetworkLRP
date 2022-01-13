@@ -3,6 +3,8 @@ import torch as tc
 import numpy as np
 from sklearn.preprocessing import RobustScaler, PowerTransformer, QuantileTransformer
 
+prop_test = 0.33
+
 def load_data_cv(loop, number_of_loops):
     dataframe = pd.read_csv('./data/tcpa_data_051017.csv')
 
@@ -54,8 +56,8 @@ def load_data_cv_overlap(loop, number_of_loops):
     np.random.seed(loop)
     indices = np.random.permutation(nsamples)
    
-    test_indices = indices[:int(indices.shape[0]*0.25)]
-    train_indices = indices[int(indices.shape[0]*0.25):]
+    test_indices = indices[:int(indices.shape[0]*prop_test)]
+    train_indices = indices[int(indices.shape[0]*prop_test):]
     
     test_data = data_tensor[test_indices,:]
     test_names = sample_names[test_indices]
@@ -106,8 +108,8 @@ def load_data_from_frame_overlap(df):
     np.random.seed(10)
     indices = np.random.permutation(nsamples)
    
-    test_indices = indices[:int(indices.shape[0]*0.25)]
-    train_indices = indices[int(indices.shape[0]*0.25):]
+    test_indices = indices[:int(indices.shape[0]*prop_test)]
+    train_indices = indices[int(indices.shape[0]*prop_test):]
     
     test_data = df.iloc[test_indices,:]
     train_data = df.iloc[train_indices,:]
