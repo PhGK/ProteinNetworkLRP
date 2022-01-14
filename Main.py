@@ -31,6 +31,7 @@ df_filtered = dataframe[list(Reactome_genes.index)]
 
 def calc_all_patients(fold):
     train_data, test_data = load_data_from_frame_overlap(df_filtered)
+    print(train_data.shape, test_data.shape)
 
     model = LRP(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)

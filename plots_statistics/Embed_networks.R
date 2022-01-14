@@ -128,10 +128,10 @@ par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
 
-png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
-par(mar=c(10,10,10,10))
-plot(mytsne)
-dev.off()
+#png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
+#par(mar=c(10,10,10,10))
+#plot(mytsne)
+#dev.off()
 
 
 

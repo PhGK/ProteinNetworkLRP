@@ -3,7 +3,7 @@ import torch as tc
 import numpy as np
 from sklearn.preprocessing import RobustScaler, PowerTransformer, QuantileTransformer
 
-prop_test = 0.33
+prop_test = 0.5
 
 def load_data_cv(loop, number_of_loops):
     dataframe = pd.read_csv('./data/tcpa_data_051017.csv')
