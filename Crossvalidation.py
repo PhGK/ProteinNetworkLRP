@@ -31,7 +31,7 @@ def crossval(loop):
                     hidden_depth=hidden_depth)
 
                 losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=25,
-                    device=tc.device("cuda:0"))
+                    device=tc.device("cpu"))
 
                 losses[['lr', 'depth', 'neurons', 'loop']] = learning_rate, hidden_depth, hidden_factor, loop
                 
