@@ -18,34 +18,35 @@ RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
 if os.path.exists(RESULTPATH):
     os.remove(RESULTPATH)
 
-nepochs = 1201
-njobs = 10
 
-def crossval(loop):
-    for learning_rate in [0.3, 0.1, 0.03, 0.01]:
-        for hidden_depth in [2,3,4,5]:
-            for hidden_factor in [5,10]:
-                print(learning_rate, hidden_depth, hidden_factor)
-                train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,10)
-                model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
-                    hidden_depth=hidden_depth)
+nepochs = 601
+njobs = 3
+learning_rates = [0.03, 0.01, 0.003, 0.001]
 
-                losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=25,
-                    device=tc.device("cpu"))
+def crossval(loop, learning_rate):
+    for hidden_depth in [2,3,4,5]:
+        for hidden_factor in [5,10]:
+            print(learning_rate, hidden_depth, hidden_factor)
+            train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,5)
+            model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
+                hidden_depth=hidden_depth)
 
-                losses[['lr', 'depth', 'neurons', 'loop']] = learning_rate, hidden_depth, hidden_factor, loop
-                
+            losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=25,
+                device=tc.device("cuda:0"))
 
-                if not os.path.exists(model_path):
-                    os.makedirs(model_path)
-                model.cpu()
+            losses[['lr', 'depth', 'neurons', 'loop']] = learning_rate, hidden_depth, hidden_factor, loop
+        
 
-
-                tc.save(model.cpu(), model_path + '_' + str(nepochs) + '_' + str(learning_rate) + '_' + str(hidden_depth) + '_' + 
-                    str(hidden_factor) +   '.pt')
-
-                losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
+            if not os.path.exists(model_path):
+                os.makedirs(model_path)
+            model.cpu()
 
 
-Parallel(n_jobs=njobs)(delayed(crossval)(loop) for loop in range(10))
+            tc.save(model.cpu(), model_path + '_' + str(nepochs) + '_' + str(learning_rate) + '_' + str(hidden_depth) + '_' + 
+                str(hidden_factor) +   '.pt')
+
+            losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
+
+
+Parallel(n_jobs=njobs)(delayed(crossval)(loop, lr) for loop in range(5) for lr in learning_rates)
 

@@ -10,8 +10,8 @@ import numpy as np
 from joblib import Parallel, delayed
 
 hidden_factor = 10
-hidden_depth = 2
-dropout = 0.05
+hidden_depth = 3
+dropout = 0.0
 gamma = 0.01
 lr = 0.1
 nepochs=801
