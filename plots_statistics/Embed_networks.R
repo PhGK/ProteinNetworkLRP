@@ -32,7 +32,7 @@ library(sp)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 
 test_data <- fread('../results/LRP/use_data/all_data.csv')
-test_data$LRP <- test_data$LRP
+
 ##################
 ##############################################################################################################################
 #load ground truth data
@@ -46,10 +46,10 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-#mediancorrelation <- summary(correlation$corr)[3]
-#highcorrelation <- correlation %>% filter(corr>mediancorrelation)
+mediancorrelation <- summary(correlation$corr)[3]
+highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
-highcorrelation <- correlation %>% filter(corr>0.7)
+#highcorrelation <- correlation %>% filter(corr>0.7)
 
 rcorr(for_correlation$y, for_correlation$y_pred)
 
@@ -66,7 +66,7 @@ test_data_sym <- left_join(test_data_dir, test_data_trans) %>% dplyr::mutate(LRP
 
 
 
-united_whole_set <- test_data_sym %>% unite('interactions', c("predicting_protein", "masked_protein")) %>%
+united_whole_set <- test_data %>% unite('interactions', c("predicting_protein", "masked_protein")) %>%
   dplyr::select(LRP, Cancer_Type, interactions, ID)
 
 #united_whole_set$LRP <- log(1+abs(united_whole_set$LRP*100))
@@ -80,22 +80,17 @@ is.na(united_whole_matrix) %>% sum()
 #####
 distances <- dist(united_whole_matrix, method = 'manhattan')
 set.seed(0)
-whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
+whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 20, is_distance=T)
 ######
-#whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity = 15)
+#whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=30)
 
 set.seed(1)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.1, minPts = 15) %>% .$cluster %>% as.factor() # 2.0, 15
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 1.5, minPts = 5) %>% .$cluster %>% as.factor() # 2.0, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
 tsne_plot <- data.frame(x = whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2], Cancer_Type = united_whole_set_wide$Cancer_Type)
 
-#library(gplots)
-#xy <- gplots::space(whole_tsne_values$Y[,1], whole_tsne_values$Y[,2], s=1/100, direction="x")
-#xy <- gplots::space(xy[[1]], xy[[2]], s=1/40, direction="y")
-#tsne_plot <- data.frame(x = xy[1], y = xy[2], Cancer_Type = united_whole_set_wide$Cancer_Type)
-#cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =xy[1], y = xy[2] )
 
 ########################
 #plot_tsne with ellipses
@@ -144,7 +139,7 @@ summary_clusters
 #################
 # generate median position
 mean_frame <- aggregate(test_data$LRP, by = list(masked_protein = test_data$masked_protein, predicting_protein = test_data$predicting_protein), median)
-mean_quantile <- quantile(mean_frame$x, 0.5)
+mean_quantile <- quantile(mean_frame$x, 0.0)
 mean_frame$x[mean_frame$x<mean_quantile] <- 0
 mean_frame_wide <- mean_frame %>% pivot_wider(names_from = masked_protein, values_from = x)
 mean_matrix <- mean_frame_wide[,-1] %>% as.matrix()
@@ -152,9 +147,9 @@ rownames(mean_matrix) <- mean_frame_wide$predicting_protein
 mean_graph <- graph_from_adjacency_matrix(mean_matrix, mode = "directed", weighted = T)
 E(mean_graph)[E(mean_graph)$weight>0]$color <- "red"
 E(mean_graph)[E(mean_graph)$weight<0]$color <- "blue"
-E(mean_graph)$weight = 0.01*E(mean_graph)$weight
-set.seed(0)
-mean_positions = layout_nicely(mean_graph)
+E(mean_graph)$weight <- 0.01 #* E(mean_graph)$weight) # 0.01/(1+E(mean_graph)$weight)
+set.seed(1)
+mean_positions =  layout_nicely(mean_graph) # layout_on_sphere(mean_graph) # layout_on_sphere(mean_graph) #
 plot(mean_graph,  layout = mean_positions, vertex.label=NA, vertex.size = 2, vertex.color = "black", edge.width = 3, vertex.label.dist=1, 
      vertex.label.cex = 0.7, edge.arrow.width=0.4, edge.arrow.size=0.1, rescale = T)
 
@@ -283,7 +278,7 @@ scale_it <- function(x,low,high) {
 
 }
 
-image_size = 0.12 # 0.15
+image_size = 0.14 # 0.15
 current_position_normalized <- current_cluster_position %>% mutate("x" = scale_it(x,0.5*image_size,1-0.5*image_size), "y" = scale_it(y,0.5*image_size,1-0.5*image_size))
 
 png(paste('./figures/temp/','cluster_',current_cluster ,'.png', sep=""), width = 2000, height = 2000, res=200)

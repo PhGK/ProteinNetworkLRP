@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.preprocessing import RobustScaler, PowerTransformer, QuantileTransformer
 
 prop_test = 0.5
+prop_train=0.5
 
 def load_data_cv(loop, number_of_loops):
     dataframe = pd.read_csv('./data/tcpa_data_051017.csv')
@@ -105,11 +106,18 @@ def load_data_from_frame_overlap(df):
     nsamples, nfeatures = df.shape
     sample_names, feature_names = np.array(df.index), np.array(df.columns)
 
-    np.random.seed(10)
-    indices = np.random.permutation(nsamples)
+    #np.random.seed(11)
+    #indices = np.random.permutation(nsamples)
+
+    #test_indices = indices[:int(indices.shape[0]*prop_test)]
+    #train_indices = indices[int(indices.shape[0]*prop_test):]
+
+    R = np.random.mtrand.RandomState(1).permutation(nsamples)
+
+    train_indices = R[:int(len(R)*prop_train)]
+    test_indices  = R[int(len(R)*prop_train):]
    
-    test_indices = indices[:int(indices.shape[0]*prop_test)]
-    train_indices = indices[int(indices.shape[0]*prop_test):]
+
     
     test_data = df.iloc[test_indices,:]
     train_data = df.iloc[train_indices,:]

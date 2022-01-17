@@ -22,13 +22,14 @@ import pandas as pd
 from dataloading import Dataset_train_from_pandas, Dataset_LRP_from_pandas
 import os
 
+stable = 1e-9
 
 class LRP_Linear(nn.Module):
-    def __init__(self, inp, outp, gamma=0.01, eps=0.0):
+    def __init__(self, inp, outp, gamma=0.01, eps=1e-5):
         super(LRP_Linear, self).__init__()
         self.A_dict = {}
         self.linear = nn.Linear(inp, outp)
-        nn.init.xavier_uniform_(self.linear.weight, gain=nn.init.calculate_gain('relu'))
+        #nn.init.xavier_uniform_(self.linear.weight, gain=nn.init.calculate_gain('relu'))
         #nn.init.xavier_normal_(self.linear.weight)
         #nn.init.normal_(self.linear.weight, mean=0, std=0.01)
         self.gamma = tc.tensor(gamma)
@@ -43,13 +44,13 @@ class LRP_Linear(nn.Module):
         return self.linear(x)
 
     def relprop(self, R):
-        stable = 1e-5
+
         device = next(self.parameters()).device
         # print('rel', self.iteration, self.A_dict[self.iteration].sum())
         A = self.A_dict[self.iteration].clone()
         A, self.eps = A.to(device), self.eps.to(device)
-        Ap = tc.where(A > self.eps, A, tc.tensor(1e-9).to(device)).detach().data.requires_grad_(True)
-        Am = tc.where(A < -self.eps, A, tc.tensor(-1e-9).to(device)).detach().data.requires_grad_(True)
+        Ap = tc.where(A > self.eps, A, tc.tensor(stable).to(device)).detach().data.requires_grad_(True)
+        Am = tc.where(A < -self.eps, A, tc.tensor(-stable).to(device)).detach().data.requires_grad_(True)
 
         zpp = self.newlayer(1).forward(Ap)  # + self.eps
         zmm = self.newlayer(-1, no_bias=True).forward(Am)  # + self.eps
@@ -98,9 +99,9 @@ class LRP_Linear(nn.Module):
     def newlayer(self, sign, no_bias=False):
 
         if sign == 1:
-            rho = lambda p: p + self.gamma * p.clamp(min=1e-9)
+            rho = lambda p: p + self.gamma * p.clamp(min=stable)
         else:
-            rho = lambda p: p - self.gamma * p.clamp(max=-1e-9)
+            rho = lambda p: p - self.gamma * p.clamp(max=-stable)
 
         layer_new = copy.deepcopy(self.linear)
 
@@ -272,7 +273,7 @@ class LRP:
 
             frame = pd.DataFrame({'LRP': LRP_value, 'predicting_protein': feature_names, 'masked_protein': feature_names[target] ,'sample_name': sample_name, 'error':error, 'y':y, 'y_pred':y_pred})
             end_frame.append(frame)
-            if any(abs(LRP_value)>10):
+            if any(np.isnan(LRP_value)):
                 print(frame)
             end_result_path = result_path + 'raw_data/' + 'LRP_' + str(sample_id) + '_' + str(sample_name) +'.csv'
             if not os.path.exists(result_path + 'raw_data/'):

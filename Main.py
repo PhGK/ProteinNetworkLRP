@@ -1,4 +1,4 @@
-from LRPclass import LRP
+from LRPclass_precise import LRP
 
 from dataloading import Dataset_train
 from data import load_data_from_frame_overlap
@@ -12,11 +12,11 @@ from joblib import Parallel, delayed
 hidden_factor = 10
 hidden_depth = 3
 dropout = 0.0
-gamma = 0.01
-lr = 0.1
-nepochs=801
+gamma = 0.1
+lr = 0.05
+nepochs=40001
 
-njobs=5
+njobs=10
 cuda=False
 PATH = '.'
 
@@ -37,7 +37,7 @@ def calc_all_patients(fold):
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
 
 
-    loss = model.train(train_data, test_data, epochs=801, lr=lr)
+    loss = model.train(train_data, test_data, epochs=nepochs, lr=lr)
     print(loss)
 
 

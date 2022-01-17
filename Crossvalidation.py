@@ -19,15 +19,15 @@ if os.path.exists(RESULTPATH):
     os.remove(RESULTPATH)
 
 
-nepochs = 601
-njobs = 3
+nepochs = 100001
+njobs = 10
 learning_rates = [0.03, 0.01, 0.003, 0.001]
 
 def crossval(loop, learning_rate):
-    for hidden_depth in [2,3,4,5]:
+    for hidden_depth in [1,2,3,4]:
         for hidden_factor in [5,10]:
             print(learning_rate, hidden_depth, hidden_factor)
-            train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,5)
+            train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,10)
             model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
                 hidden_depth=hidden_depth)
 
@@ -48,5 +48,5 @@ def crossval(loop, learning_rate):
             losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
 
 
-Parallel(n_jobs=njobs)(delayed(crossval)(loop, lr) for loop in range(5) for lr in learning_rates)
+Parallel(n_jobs=njobs)(delayed(crossval)(loop, lr) for loop in range(10) for lr in learning_rates)
 
