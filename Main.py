@@ -1,4 +1,4 @@
-from LRPclass_precise import LRP
+from LRPclass import LRP
 
 from dataloading import Dataset_train
 from data import load_data_from_frame_overlap
@@ -12,11 +12,11 @@ from joblib import Parallel, delayed
 hidden_factor = 10
 hidden_depth = 3
 dropout = 0.0
-gamma = 0.1
-lr = 0.05
-nepochs=40001
+gamma = 0.01
+lr = 0.01
+nepochs=801
 
-njobs=10
+njobs=5
 cuda=False
 PATH = '.'
 
@@ -43,7 +43,8 @@ def calc_all_patients(fold):
 
     #for sample_id, sample_name in enumerate(test_data.index):
     #    model.compute_network(test_data,sample_name, sample_id,RESULTPATH,device = tc.device("cuda:0" if cuda else "cpu") )
-
+    tc.set_default_dtype(tc.float64)
+    model.model.double()
     print('computing LRP...')
     Parallel(n_jobs=njobs)(delayed(model.compute_network)(test_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")) 
         for sample_id, sample_name in enumerate(test_data.index))

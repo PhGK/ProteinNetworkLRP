@@ -76,9 +76,10 @@ class Dataset_train_from_pandas(Dataset):
 
 class Dataset_LRP_from_pandas(Dataset):
     def __init__(self, df, target_id, sample_id, maskspersample=10000):
+        tc.set_default_dtype(tc.float64)
         self.nsamples, self.nfeatures = df.shape
         self.df = df
-        self.sample_names, self.feature_names, self.data_tensor = np.array(df.index), np.array(df.columns), tc.tensor(np.array(df)).float()
+        self.sample_names, self.feature_names, self.data_tensor = np.array(df.index), np.array(df.columns), tc.tensor(np.array(df)).double()#.float()
         self.target_id = target_id
         self.sample_id =sample_id
         self.maskspersample = maskspersample

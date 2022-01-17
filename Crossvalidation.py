@@ -20,8 +20,9 @@ if os.path.exists(RESULTPATH):
 
 
 nepochs = 100001
-njobs = 10
+njobs = 3
 learning_rates = [0.03, 0.01, 0.003, 0.001]
+nloops=10
 
 def crossval(loop, learning_rate):
     for hidden_depth in [1,2,3,4]:
@@ -48,5 +49,5 @@ def crossval(loop, learning_rate):
             losses.to_csv(RESULTPATH, mode='a', header=not os.path.exists(RESULTPATH))
 
 
-Parallel(n_jobs=njobs)(delayed(crossval)(loop, lr) for loop in range(10) for lr in learning_rates)
+Parallel(n_jobs=njobs)(delayed(crossval)(loop, lr) for loop in range(nloops) for lr in learning_rates)
 

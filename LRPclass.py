@@ -23,6 +23,7 @@ from dataloading import Dataset_train_from_pandas, Dataset_LRP_from_pandas
 import os
 
 
+
 class LRP_Linear(nn.Module):
     def __init__(self, inp, outp, gamma=0.01, eps=0.0):
         super(LRP_Linear, self).__init__()
@@ -43,7 +44,6 @@ class LRP_Linear(nn.Module):
         return self.linear(x)
 
     def relprop(self, R):
-        stable = 1e-5
         device = next(self.parameters()).device
         # print('rel', self.iteration, self.A_dict[self.iteration].sum())
         A = self.A_dict[self.iteration].clone()
@@ -205,7 +205,7 @@ class LRP:
                 loss = criterion(pred[mask==0], full_data[mask==0]) 
                 loss.backward()
                 optimizer.step()
-                break
+
 	    
 
             if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,5000,10000,20000,30000,40000]:
@@ -229,6 +229,7 @@ class LRP:
 
 
     def compute_LRP(self, test_set, target_id, sample_id, batch_size, device = tc.device('cpu')):
+
         criterion = nn.MSELoss()
         testset = Dataset_LRP_from_pandas(test_set, target_id, sample_id)
         testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
@@ -236,7 +237,9 @@ class LRP:
         self.model.to(device).eval()
 
         masked_data, mask, full_data = next(iter(testloader))
+
         masked_data, mask, full_data = masked_data.to(device), mask.to(device), full_data.to(device)
+
         pred = self.model(masked_data)
 
         error = criterion(pred.detach()[:,target_id], full_data.detach()[:,target_id]).cpu().numpy()
@@ -251,7 +254,6 @@ class LRP:
         LRP_sum = (a.mean(dim=0))
 
         LRP_unexpanded = 0.5 * (LRP_sum[:LRP_sum.shape[0] // 2] + LRP_sum[LRP_sum.shape[0] // 2:])
-
 
         #mask_sum = mask.sum(dim=0).float()
 
