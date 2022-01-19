@@ -82,7 +82,7 @@ distances <- dist(united_whole_matrix, method = 'manhattan')
 set.seed(0)
 whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
 ######
-whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=15)
+#whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=15)
 
 set.seed(1)
 dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.2, minPts = 5) %>% .$cluster %>% as.factor() # 2.0, 15
