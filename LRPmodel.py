@@ -29,8 +29,7 @@ class LRP_Linear2(nn.Module):
         self.A_dict = {}
         self.linear = nn.Linear(inp, outp)
         nn.init.xavier_uniform_(self.linear.weight, gain=nn.init.calculate_gain('relu'))
-        #nn.init.xavier_normal_(self.linear.weight)
-        #nn.init.normal_(self.linear.weight, mean=0, std=0.01)
+
         self.gamma = tc.tensor(gamma)
         self.eps = tc.tensor(eps)
         self.rho = None

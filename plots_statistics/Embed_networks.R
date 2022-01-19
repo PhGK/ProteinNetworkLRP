@@ -80,12 +80,12 @@ is.na(united_whole_matrix) %>% sum()
 #####
 distances <- dist(united_whole_matrix, method = 'manhattan')
 set.seed(0)
-whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 10, is_distance=T)
+whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
 ######
-#whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=30)
+whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=15)
 
 set.seed(1)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 3.1, minPts = 10) %>% .$cluster %>% as.factor() # 2.0, 15
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.2, minPts = 5) %>% .$cluster %>% as.factor() # 2.0, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -322,7 +322,7 @@ marginplots <- function(selCancer_Type) {
     geom_point(alpha = 0.0) + 
     geom_line(aes(color = ID, group = ID), show.legend = F) +
     ggtitle(selCancer_Type) +
-    ylim(0,0.7)+ 
+    ylim(0,5.0)+ 
     xlab('Interactions')+
     theme_bw()+
     scale_x_continuous(breaks = pretty_breaks())

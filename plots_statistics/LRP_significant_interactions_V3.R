@@ -178,8 +178,8 @@ plotobject2 <- plotobject +
 plotobject2 <- plotobject + 
   geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
-  geom_text(data = description, aes(x = 10, y = 0.10, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
-  geom_text(data = description, aes(x = 11, y = 0.09, label = paste('p: ', adjpvalue))) + 
+  geom_text(data = description, aes(x = 10, y = 13.0, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
+  geom_text(data = description, aes(x = 11, y = 11.5, label = paste('p: ', adjpvalue))) + 
   theme_bw()+
   theme(axis.text.x = element_blank(), 
         strip.background = element_blank(),

@@ -29,6 +29,97 @@ class LRP_Linear(nn.Module):
         super(LRP_Linear, self).__init__()
         self.A_dict = {}
         self.linear = nn.Linear(inp, outp)
+        nn.init.xavier_uniform_(self.linear.weight, gain=nn.init.calculate_gain('relu'))
+        self.gamma = tc.tensor(gamma)
+        self.eps = tc.tensor(eps)
+        self.rho = None
+        self.iteration = None
+
+    def forward(self, x):
+
+        if not self.training:
+            self.A_dict[self.iteration] = x.clone()
+        return self.linear(x)
+
+    def relprop(self, R):
+        device = next(self.parameters()).device
+
+        A = self.A_dict[self.iteration].clone()
+        A, self.eps = A.to(device), self.eps.to(device)
+
+        Ap = A.clamp(min=0).detach().data.requires_grad_(True)
+        Am = A.clamp(max=0).detach().data.requires_grad_(True)
+
+
+        zpp = self.newlayer(1).forward(Ap)  
+        zmm = self.newlayer(-1, no_bias=True).forward(Am) 
+
+        zmp = self.newlayer(1, no_bias=True).forward(Am) 
+        zpm = self.newlayer(-1).forward(Ap) 
+
+        with tc.no_grad():
+            Y = self.forward(A).data
+
+        sp = ((Y > 0).float() * R / (zpp + zmm + self.eps * ((zpp + zmm == 0).float() + tc.sign(zpp + zmm)))).data # new version
+        sm = ((Y < 0).float() * R / (zmp + zpm + self.eps * ((zmp + zpm == 0).float() + tc.sign(zmp + zpm)))).data
+
+        (zpp * sp).sum().backward()
+        cpp = Ap.grad
+        Ap.grad = None
+        Ap.requires_grad_(True)
+
+        (zpm * sm).sum().backward()
+        cpm = Ap.grad
+        Ap.grad = None
+        Ap.requires_grad_(True)
+
+        (zmp * sp).sum().backward()
+        cmp = Am.grad
+
+        Am.grad = None
+        Am.requires_grad_(True)
+
+        (zmm * sm).sum().backward()
+        cmm = Am.grad
+        Am.grad = None
+        Am.requires_grad_(True)
+
+
+        R_1 = (Ap * cpp).data
+        R_2 = (Ap * cpm).data
+        R_3 = (Am * cmp).data
+        R_4 = (Am * cmm).data
+
+
+        return R_1 + R_2 + R_3 + R_4
+
+    def newlayer(self, sign, no_bias=False):
+
+        if sign == 1:
+            rho = lambda p: p + self.gamma * p.clamp(min=0) # Replace 1e-9 by zero
+        else:
+            rho = lambda p: p - self.gamma * p.clamp(max=0) # same here
+
+        layer_new = copy.deepcopy(self.linear)
+
+        try:
+            layer_new.weight = nn.Parameter(rho(self.linear.weight))
+        except AttributeError:
+            pass
+
+        try:
+            layer_new.bias = nn.Parameter(self.linear.bias * 0 if no_bias else rho(self.linear.bias))
+        except AttributeError:
+            pass
+
+        return layer_new
+
+
+class LRP_Linear_old(nn.Module):
+    def __init__(self, inp, outp, gamma=0.01, eps=1e-5):
+        super(LRP_Linear, self).__init__()
+        self.A_dict = {}
+        self.linear = nn.Linear(inp, outp)
         #nn.init.xavier_uniform_(self.linear.weight, gain=nn.init.calculate_gain('relu'))
         #nn.init.xavier_normal_(self.linear.weight)
         #nn.init.normal_(self.linear.weight, mean=0, std=0.01)
@@ -209,8 +300,8 @@ class LRP:
                 break
 	    
 
-            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,5000,10000,20000,30000,40000]:
-                print(epoch)
+            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,5000,10000,20000,30000,40000, 60000, 80000, 100000]:
+
                 self.model.eval()
                 testset = Dataset_train_from_pandas(test_data)
                 testloader = DataLoader(testset, batch_size=test_data.shape[0], shuffle=False)
@@ -223,7 +314,7 @@ class LRP:
                         pred = self.model(masked_data)
                     testloss = criterion(pred[mask==0], full_data[mask==0])
                     break
-
+                print(epoch, testloss)
                 losses.append(pd.DataFrame({'trainloss': [loss.detach().cpu().numpy()], 'testloss': [testloss.cpu().numpy()], 'epoch': [epoch]}))
 
         return pd.concat(losses)
@@ -249,7 +340,7 @@ class LRP:
 
         a = self.model.relprop(R)
 
-        LRP_sum = (a.mean(dim=0))
+        LRP_sum = (a.sum(dim=0))
 
         LRP_unexpanded = 0.5 * (LRP_sum[:LRP_sum.shape[0] // 2] + LRP_sum[LRP_sum.shape[0] // 2:])
 

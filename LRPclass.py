@@ -25,7 +25,7 @@ import os
 
 
 class LRP_Linear(nn.Module):
-    def __init__(self, inp, outp, gamma=0.01, eps=0.0):
+    def __init__(self, inp, outp, gamma=0.01, eps=1e-5):
         super(LRP_Linear, self).__init__()
         self.A_dict = {}
         self.linear = nn.Linear(inp, outp)
@@ -251,7 +251,7 @@ class LRP:
 
         a = self.model.relprop(R)
 
-        LRP_sum = (a.mean(dim=0))
+        LRP_sum = (a.sum(dim=0))
 
         LRP_unexpanded = 0.5 * (LRP_sum[:LRP_sum.shape[0] // 2] + LRP_sum[LRP_sum.shape[0] // 2:])
 
