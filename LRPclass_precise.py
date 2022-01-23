@@ -22,7 +22,7 @@ import pandas as pd
 from dataloading import Dataset_train_from_pandas, Dataset_LRP_from_pandas
 import os
 
-stable = 1e-9
+
 
 class LRP_Linear(nn.Module):
     def __init__(self, inp, outp, gamma=0.01, eps=1e-5):
@@ -249,11 +249,11 @@ class LRP_noise(nn.Module):
 class Model(nn.Module):
     def __init__(self, inp, outp, hidden, hidden_depth, gamma=0.01, dropout = 0.0):
         super(Model, self).__init__()
-        self.layers = nn.Sequential(LRP_Linear(inp, hidden, gamma=gamma), LRP_ReLU(), LRP_DropOut(dropout))
+        self.layers = nn.Sequential(LRP_Linear(inp, hidden, gamma=gamma), LRP_ReLU())
         for i in range(hidden_depth):
             self.layers.add_module('LRP_Linear' + str(i + 1), LRP_Linear(hidden, hidden, gamma=gamma))
             self.layers.add_module('LRP_ReLU' + str(i + 1), LRP_ReLU())
-            self.layers.add_module('LRP_DropOut' + str(i + 1), LRP_DropOut(dropout))
+
         self.layers.add_module('LRP_Linear_last', LRP_Linear(hidden, outp, gamma=gamma))
 
         if hidden_depth==-1:
@@ -277,7 +277,7 @@ class LRP:
 
     def train(self, train_data, test_data, epochs, lr = 0.01, batch_size=25, device=tc.device('cpu')):
         nsamples, nfeatures = train_data.shape
-        optimizer = tc.optim.SGD(self.model.parameters(), lr=lr)#, momentum=0.9)
+        optimizer = tc.optim.SGD(self.model.parameters(), lr=lr, momentum=0.9)
         #optimizer = tc.optim.Adam(self.model.parameters(), lr=lr)
         criterion = nn.MSELoss()
         self.model.train().to(device)
@@ -313,7 +313,7 @@ class LRP:
                     with tc.no_grad():
                         pred = self.model(masked_data)
                     testloss = criterion(pred[mask==0], full_data[mask==0])
-                    break
+
                 print(epoch, testloss)
                 losses.append(pd.DataFrame({'trainloss': [loss.detach().cpu().numpy()], 'testloss': [testloss.cpu().numpy()], 'epoch': [epoch]}))
 

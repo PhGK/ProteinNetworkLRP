@@ -34,8 +34,12 @@ elif datatype == 'heterogeneous':
 else:
     print('data not found')
 
+
+if not os.path.exists(RESULTPATH):
+    os.makedirs(RESULTPATH)
+
 def calc_all_patients(fold):
-    train_data, test_data = load_data_cv_from_frame(df, fold,4)
+    train_data, test_data = load_data_cv_from_frame(df, fold,2)
 
     if datatype == 'heterogeneous':
             train_data.to_csv('./results/artificial/artificial_heterogeneous_train.csv')

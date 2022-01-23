@@ -205,6 +205,7 @@ class LRP:
                 loss = criterion(pred[mask==0], full_data[mask==0]) 
                 loss.backward()
                 optimizer.step()
+                break
 
 	    
 

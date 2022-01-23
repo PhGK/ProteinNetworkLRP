@@ -130,7 +130,7 @@ h1 <- highest_names[1:36,] %>% left_join(adj_react_long_sym, by = c("masked_prot
 sym_LRP <- sym_LRP %>% left_join(adj_react_long_sym, by = c("masked_protein", "predicting_protein")) %>%
   dplyr::mutate("predicting_protein" = ifelse(edge==1, paste(predicting_protein, '*', sep=''), predicting_protein))
 subset_data <- left_join(h1, sym_LRP) %>% dplyr::group_by(predicting_protein, masked_protein, Cancer_Type) %>%
-  dplyr::summarize("meanLRP" = median(LRP_sym))
+  dplyr::summarize("meanLRP" = median(LRP_sym), 'IQR' = IQR(LRP_sym))
 ########################
 
 medians_IQR <- left_join(h1, sym_LRP) %>%dplyr::select(-Cancer_Type) %>% dplyr::group_by(predicting_protein, masked_protein) %>%
@@ -162,6 +162,8 @@ plotobject <- ggplot(subset_data, aes(x = Cancer_Type, y =meanLRP, fill = Cancer
 
 plotobject2 <- plotobject + 
   geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
+  geom_errorbar(data = subset_data, aes(ymin=meanLRP, ymax=meanLRP+IQR), width=.2,
+                position=position_dodge(.9)) +
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
   theme_bw()+
   theme(axis.text.x = element_blank(), 
@@ -177,6 +179,8 @@ plotobject2 <- plotobject +
 
 plotobject2 <- plotobject + 
   geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
+  geom_errorbar(data = subset_data, aes(ymin=meanLRP, ymax=meanLRP+IQR), width=.2,
+                position=position_dodge(.9)) +
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
   geom_text(data = description, aes(x = 10, y = 13.0, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
   geom_text(data = description, aes(x = 11, y = 11.5, label = paste('p: ', adjpvalue))) + 

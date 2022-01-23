@@ -13,8 +13,8 @@ hidden_factor = 10
 hidden_depth = 2
 dropout = 0.0
 gamma = 0.01
-lr = 0.1
-nepochs= 100001
+lr = 0.01
+nepochs= 200001
 
 njobs=10
 cuda=False

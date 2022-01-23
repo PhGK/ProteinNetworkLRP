@@ -16,14 +16,15 @@ PATH = '.'
 model_path = PATH + '/results/crossvalidation/models/'
 RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
 if os.path.exists(RESULTPATH):
-    pass#os.remove(RESULTPATH)
+    os.remove(RESULTPATH)
 
 
-nepochs = 100001
+nepochs = 200001
 njobs = 15
-learning_rates = [0.1, 0.03, 0.01, 0.003]
-nloops=5
+learning_rates = [0.03, 0.01, 0.003]
+nloops=10
 hidden_depths = [1,2,3,4]
+nbatch = 50
 
 def crossval(loop, learning_rate, hidden_depth):
     for hidden_factor in [5,10]:
@@ -32,8 +33,8 @@ def crossval(loop, learning_rate, hidden_depth):
         model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
             hidden_depth=hidden_depth)
 
-        losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=25,
-            device=tc.device("cpu"))
+        losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=nbatch,
+            device=tc.device("cuda:0"))
 
         losses[['lr', 'depth', 'neurons', 'loop']] = learning_rate, hidden_depth, hidden_factor, loop
 
