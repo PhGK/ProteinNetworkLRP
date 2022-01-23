@@ -20,8 +20,8 @@ if os.path.exists(RESULTPATH):
 
 
 nepochs = 200001
-njobs = 15
-learning_rates = [0.03, 0.01, 0.003]
+njobs = 1
+learning_rates = [0.1, 0.03, 0.01, 0.003]
 nloops=10
 hidden_depths = [1,2,3,4]
 nbatch = 50
