@@ -297,7 +297,7 @@ class LRP:
                 loss = criterion(pred[mask==0], full_data[mask==0]) 
                 loss.backward()
                 optimizer.step()
-                break
+
 	    
 
             if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,5000,10000,20000,30000,40000, 60000, 80000, 100000]:

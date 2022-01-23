@@ -19,12 +19,12 @@ if os.path.exists(RESULTPATH):
     os.remove(RESULTPATH)
 
 
-nepochs = 200001
+nepochs = 2001
 njobs = 1
 learning_rates = [0.1, 0.03, 0.01, 0.003]
 nloops=10
 hidden_depths = [1,2,3,4]
-nbatch = 50
+nbatch = 25
 
 def crossval(loop, learning_rate, hidden_depth):
     for hidden_factor in [5,10]:
