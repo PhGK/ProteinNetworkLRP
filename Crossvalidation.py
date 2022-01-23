@@ -20,7 +20,7 @@ if os.path.exists(RESULTPATH):
 
 
 nepochs = 2001
-njobs = 1
+njobs = 10
 learning_rates = [0.1, 0.03, 0.01, 0.003]
 nloops=10
 hidden_depths = [1,2,3,4]
