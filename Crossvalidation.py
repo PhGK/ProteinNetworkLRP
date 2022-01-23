@@ -20,21 +20,21 @@ if os.path.exists(RESULTPATH):
 
 
 nepochs = 2001
-njobs = 10
+njobs = 20 
 learning_rates = [0.1, 0.03, 0.01, 0.003]
 nloops=10
 hidden_depths = [1,2,3,4]
-nbatch = 25
+nbatch = 50
 
 def crossval(loop, learning_rate, hidden_depth):
-    for hidden_factor in [5,10]:
+    for hidden_factor in [10, 5]:
         print(learning_rate, hidden_depth, hidden_factor)
         train_data, test_data, featurenames, train_names, test_names = load_data_cv_overlap(loop,10)
         model = Model(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
             hidden_depth=hidden_depth)
 
         losses = train(model, train_data, test_data, epochs=nepochs, lr=learning_rate, batch_size=nbatch,
-            device=tc.device("cuda:0"))
+            device=tc.device("cpu"))
 
         losses[['lr', 'depth', 'neurons', 'loop']] = learning_rate, hidden_depth, hidden_factor, loop
 
