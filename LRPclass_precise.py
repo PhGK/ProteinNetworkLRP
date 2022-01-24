@@ -247,14 +247,14 @@ class LRP_noise(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, inp, outp, hidden, hidden_depth, gamma=0.01, dropout = 0.0):
+    def __init__(self, inp, outp, hidden, hidden_depth, gamma, dropout = 0.0):
         super(Model, self).__init__()
         self.layers = nn.Sequential(LRP_Linear(inp, hidden, gamma=gamma), LRP_ReLU())
         for i in range(hidden_depth):
             self.layers.add_module('LRP_Linear' + str(i + 1), LRP_Linear(hidden, hidden, gamma=gamma))
             self.layers.add_module('LRP_ReLU' + str(i + 1), LRP_ReLU())
 
-        self.layers.add_module('LRP_Linear_last', LRP_Linear(hidden, outp, gamma=gamma))
+        self.layers.add_module('LRP_Linear_last', LRP_Linear(hidden, outp, gamma=1e-5))
 
         if hidden_depth==-1:
             self.layers = nn.Sequential(LRP_Linear2(inp, outp, gamma=gamma))
@@ -300,7 +300,7 @@ class LRP:
 
 	    
 
-            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,5000,10000,20000,30000,40000, 60000, 80000, 100000]:
+            if epoch in [1,5,10,20,50, 100, 150,200, 250, 300, 350, 400, 600,800,1000,1200,2000, 3000, 4000, 5000,10000,20000,30000,40000, 60000, 80000, 100000]:
 
                 self.model.eval()
                 testset = Dataset_train_from_pandas(test_data)
@@ -316,6 +316,7 @@ class LRP:
 
                 print(epoch, testloss)
                 losses.append(pd.DataFrame({'trainloss': [loss.detach().cpu().numpy()], 'testloss': [testloss.cpu().numpy()], 'epoch': [epoch]}))
+        self.model.cpu()
 
         return pd.concat(losses)
 
@@ -326,6 +327,7 @@ class LRP:
         testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
 
         self.model.to(device).eval()
+
 
         masked_data, mask, full_data = next(iter(testloader))
         masked_data, mask, full_data = masked_data.to(device), mask.to(device), full_data.to(device)

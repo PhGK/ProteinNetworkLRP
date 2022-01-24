@@ -46,7 +46,7 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-mediancorrelation <- summary(correlation$corr)[5]
+mediancorrelation <- summary(correlation$corr)[3]
 highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
 #highcorrelation <- correlation %>% filter(corr>0.7)
@@ -78,14 +78,14 @@ united_whole_matrix <- as.matrix(united_whole_set_wide[,-c(1,2)])
 
 is.na(united_whole_matrix) %>% sum()
 #####
-distances <- dist(united_whole_matrix, method = 'manhattan')
+#distances <- dist(united_whole_matrix, method = 'manhattan')
 set.seed(0)
-whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
+#whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
 ######
-#whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=15)
+whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=15)
 
 set.seed(1)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.1, minPts = 10) %>% .$cluster %>% as.factor() # 2.0, 15
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.8, minPts = 5) %>% .$cluster %>% as.factor() # 2.0, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -139,7 +139,7 @@ summary_clusters
 #################
 # generate median position
 mean_frame <- aggregate(test_data$LRP, by = list(masked_protein = test_data$masked_protein, predicting_protein = test_data$predicting_protein), median)
-mean_quantile <- quantile(mean_frame$x, 0.0)
+mean_quantile <- quantile(mean_frame$x, 0.9)
 mean_frame$x[mean_frame$x<mean_quantile] <- 0
 mean_frame_wide <- mean_frame %>% pivot_wider(names_from = masked_protein, values_from = x)
 mean_matrix <- mean_frame_wide[,-1] %>% as.matrix()
@@ -147,7 +147,7 @@ rownames(mean_matrix) <- mean_frame_wide$predicting_protein
 mean_graph <- graph_from_adjacency_matrix(mean_matrix, mode = "directed", weighted = T)
 E(mean_graph)[E(mean_graph)$weight>0]$color <- "red"
 E(mean_graph)[E(mean_graph)$weight<0]$color <- "blue"
-E(mean_graph)$weight <- 0.01 #* E(mean_graph)$weight) # 0.01/(1+E(mean_graph)$weight)
+E(mean_graph)$weight <- 0.01#/(1+E(mean_graph)$weight) #* E(mean_graph)$weight) # 0.01/(1+E(mean_graph)$weight)
 set.seed(1)
 mean_positions =  layout_nicely(mean_graph) # layout_on_sphere(mean_graph) # layout_on_sphere(mean_graph) #
 plot(mean_graph,  layout = mean_positions, vertex.label=NA, vertex.size = 2, vertex.color = "black", edge.width = 3, vertex.label.dist=1, 

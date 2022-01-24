@@ -14,11 +14,12 @@ hidden_depth = 2
 dropout = 0.0
 gamma = 0.01
 lr = 0.01
-nepochs= 1001
+nepochs= 3001
 
-njobs=10
+njobs=15
 cuda=False
 PATH = '.'
+nbatch = 50
 
 model_path = PATH + '/results/LRP/models/'
 RESULTPATH = PATH + '/results/LRP/'
@@ -37,14 +38,14 @@ def calc_all_patients(fold):
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
 
 
-    loss = model.train(train_data, test_data, epochs=nepochs, lr=lr)
+    loss = model.train(train_data, test_data, epochs=nepochs, lr=lr, batch_size=nbatch, device = tc.device("cuda:0" if cuda else "cpu"))
     print(loss)
-
+    #model.model.to(tc.device("cuda:0" if cuda else "cpu"))
 
     #for sample_id, sample_name in enumerate(test_data.index):
     #    model.compute_network(test_data,sample_name, sample_id,RESULTPATH,device = tc.device("cuda:0" if cuda else "cpu") )
-    #tc.set_default_dtype(tc.float64)
-    #model.model.double()
+
+
     print('computing LRP...')
     Parallel(n_jobs=njobs)(delayed(model.compute_network)(test_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")) 
         for sample_id, sample_name in enumerate(test_data.index))

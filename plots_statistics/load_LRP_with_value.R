@@ -32,3 +32,10 @@ write.csv(all_data_ORGAN,paste0(USEPATH, 'all_data.csv'), row.names=F)
 print(dim(all_data))
 
 
+all_data_ORGAN %>% dplyr::arrange(desc(LRP)) %>% .[5,]
+all_data_ORGAN$LRP %>% max
+
+all_data_ORGAN$LRP %>% min
+all_data_ORGAN %>% dplyr::arrange(LRP) %>% .[5,]
+
+all_data_ORGAN$LRP %>% IQR
