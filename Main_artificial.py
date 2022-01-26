@@ -21,7 +21,7 @@ njobs=1
 cuda=True
 PATH = '.'
 
-datatype = 'homogeneous'
+datatype = 'heterogeneous'
 RESULTPATH = PATH + '/results/artificial/' + datatype + '/'
 nsamples=4000
 
@@ -44,6 +44,8 @@ def calc_all_patients(fold):
     if datatype == 'heterogeneous':
             train_data.to_csv('./results/artificial/artificial_heterogeneous_train.csv')
             test_data.to_csv('./results/artificial/artificial_heterogeneous_test.csv')
+            train_data.to_csv('./data/artificial_heterogeneous_train.csv')
+            test_data.to_csv('./data/artificial_heterogeneous_test.csv')
 
     model = LRP(train_data.shape[1] * 2, train_data.shape[1], hidden=(train_data.shape[1]) * hidden_factor,
                hidden_depth=hidden_depth, gamma=gamma, dropout=dropout)
