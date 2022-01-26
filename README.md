@@ -14,7 +14,6 @@ The computation of protein interaction networks for individual patient's tumors 
 - nbatch: batch size
 - cuda: Boolean. If True, experiment will run on the gpu
 - njobs: number of parallel jobs. Will not effect training of network
-
 Results can be found in results/LRP/raw_data
 
 2) Computation of artificial networks
