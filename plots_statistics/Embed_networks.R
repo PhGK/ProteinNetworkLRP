@@ -85,7 +85,7 @@ set.seed(0)
 whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=30)
 
 set.seed(0)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.3, minPts = 15) %>% .$cluster %>% as.factor() # 2.0, 15
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.4, minPts = 15) %>% .$cluster %>% as.factor() # 2.0, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -108,7 +108,7 @@ mytsne <- ggplot(tsne_plot) +
   geom_point(aes(x=x, y=y, color=Cancer_Type)) + 
   geom_mark_ellipse(data = tsne_plot[dbclusters!=0 & as.numeric(dbclusters)<=limit,], aes(x=x, y=y, group = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit], label = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit]), 
                     label.buffer = unit(0.1, 'mm'), con.cap = 0.01, con.type = "straight", label.fontsize = 30, label.fontface = 'plain') +
-  geom_label(aes(x=x, y=y, label=Cancer_Type))+
+  #geom_label(aes(x=x, y=y, label=Cancer_Type))+
   labs(col="Cancer")+
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
@@ -123,9 +123,23 @@ par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
 
+mytsne_labeled <- ggplot(tsne_plot) + 
+  geom_point(aes(x=x, y=y, color=Cancer_Type)) + 
+  geom_mark_ellipse(data = tsne_plot[dbclusters!=0 & as.numeric(dbclusters)<=limit,], aes(x=x, y=y, group = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit], label = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit]), 
+                    label.buffer = unit(0.1, 'mm'), con.cap = 0.01, con.type = "straight", label.fontsize = 30, label.fontface = 'plain') +
+  geom_label(aes(x=x, y=y, label=Cancer_Type))+
+  labs(col="Cancer")+
+  theme(panel.background = element_blank(), 
+        axis.line = element_line(colour = "black"),
+        legend.text = element_text(size=20),
+        legend.title = element_text(size=20),
+        axis.text = element_text(size=15), 
+        axis.title = element_text(size=20))+
+  guides(color = guide_legend(override.aes = list(size = 4)))
+
 png(paste('./figures/interaction_tsne_numbered_label', '.png', sep = ""), width = 2800, height = 2800, res = 120)
 par(mar=c(10,10,10,10))
-plot(mytsne)
+plot(mytsne_labeled)
 dev.off()
 
 
@@ -296,7 +310,7 @@ dev.off()
 #########################################################
 #test interactions between c-MET caspase8 parpcleaved Snail ercc1
 library(ggExtra)
-selprots <- c("CMET", "CASPASE8", "PARPCLEAVED", "SNAIL", "ERCC1", "RB1")
+selprots <- c("CMET", "CASPASE8", "PARPCLEAVED", "SNAIL", "ERCC1", "RB")
 
 quintum <-test_data %>% ungroup()%>%
   dplyr::filter(predicting_protein %in% selprots, masked_protein %in% selprots, predicting_protein!=masked_protein) %>%

@@ -60,7 +60,6 @@ LRP_data_sel  <- LRP_data %>%
 
 
 
-# build log LRP for better visibility
 log_LRP_sel <- LRP_data_sel %>% dplyr::select(predicting_protein, masked_protein, LRP, sample_name, sample_group, rank) %>% 
   group_by(sample_name) %>%
   mutate("LRP" = LRP, "group_sample_name" = sample_name%%1000)
