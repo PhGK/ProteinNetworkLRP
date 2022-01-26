@@ -46,7 +46,7 @@ for_correlation <- test_data %>% dplyr::select(ID, y, y_pred) %>%
   group_by(ID)
 
 correlation <- ddply(for_correlation, "ID", summarize, "corr" = cor(y, y_pred))
-mediancorrelation <- summary(correlation$corr)[3]
+mediancorrelation <- summary(correlation$corr)[5]
 highcorrelation <- correlation %>% filter(corr>mediancorrelation)
 
 #highcorrelation <- correlation %>% filter(corr>0.7)
@@ -80,12 +80,12 @@ is.na(united_whole_matrix) %>% sum()
 #####
 #distances <- dist(united_whole_matrix, method = 'manhattan')
 set.seed(0)
-#whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 15, is_distance=T)
+#whole_tsne_values <- Rtsne(sqrt(distances), dim=2, perplexity = 30, is_distance=T)
 ######
-whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=15)
+whole_tsne_values <- Rtsne(united_whole_matrix, dim=2, perplexity=30)
 
-set.seed(1)
-dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.8, minPts = 5) %>% .$cluster %>% as.factor() # 2.0, 15
+set.seed(0)
+dbclusters <- whole_tsne_values$Y %>% dbscan(eps = 2.3, minPts = 15) %>% .$cluster %>% as.factor() # 2.0, 15
 
 cluster_data = data.frame(dbclusters, Cancer_Type = united_whole_set_wide$Cancer_Type, ID= united_whole_set_wide$ID, x =whole_tsne_values$Y[,1], y = whole_tsne_values$Y[,2] )
 
@@ -108,7 +108,7 @@ mytsne <- ggplot(tsne_plot) +
   geom_point(aes(x=x, y=y, color=Cancer_Type)) + 
   geom_mark_ellipse(data = tsne_plot[dbclusters!=0 & as.numeric(dbclusters)<=limit,], aes(x=x, y=y, group = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit], label = dbclusters[dbclusters!=0 & as.numeric(dbclusters)<=limit]), 
                     label.buffer = unit(0.1, 'mm'), con.cap = 0.01, con.type = "straight", label.fontsize = 30, label.fontface = 'plain') +
-  #geom_label(aes(x=x, y=y, label=Cancer_Type))+
+  geom_label(aes(x=x, y=y, label=Cancer_Type))+
   labs(col="Cancer")+
   theme(panel.background = element_blank(), 
         axis.line = element_line(colour = "black"),
@@ -123,10 +123,10 @@ par(mar=c(10,10,10,10))
 plot(mytsne)
 dev.off()
 
-#png(paste('./figures/interaction_tsne_numbered', '.png', sep = ""), width = 2800, height = 2800, res = 120)
-#par(mar=c(10,10,10,10))
-#plot(mytsne)
-#dev.off()
+png(paste('./figures/interaction_tsne_numbered_label', '.png', sep = ""), width = 2800, height = 2800, res = 120)
+par(mar=c(10,10,10,10))
+plot(mytsne)
+dev.off()
 
 
 
@@ -156,17 +156,11 @@ plot(mean_graph,  layout = mean_positions, vertex.label=NA, vertex.size = 2, ver
 ################
 seedfunction <- function(clusternumber){
   seed=0
-  if (clusternumber==5) {seed = 0}
-  if (clusternumber==8) {seed = 0}
-  print(seed)
   seed
 }
 cutofffunction <- function(clusternumber){
   #for visibility
-  cutoff=0.9997
-  if (clusternumber==2) {cutoff = 0.999}
-  #if (clusternumber==6) {cutoff = 0.9998}
-  #if (clusternumber==8) {cutoff = 0.999}
+  cutoff=0.999
   cutoff
 }
 
@@ -302,7 +296,7 @@ dev.off()
 #########################################################
 #test interactions between c-MET caspase8 parpcleaved Snail ercc1
 library(ggExtra)
-selprots <- c("CMET", "CASPASE8", "PARPCLEAVED", "SNAIL", "ERCC1")
+selprots <- c("CMET", "CASPASE8", "PARPCLEAVED", "SNAIL", "ERCC1", "RB1")
 
 quintum <-test_data %>% ungroup()%>%
   dplyr::filter(predicting_protein %in% selprots, masked_protein %in% selprots, predicting_protein!=masked_protein) %>%

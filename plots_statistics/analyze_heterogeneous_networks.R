@@ -117,14 +117,14 @@ levels(aggregated_LRP_data$pp_group) <- c("Pr 1-8", "Pr 9-16","Pr 17-24","Pr 25-
 levels(aggregated_LRP_data$mp_group) <-c("Proteins 1-8", "Proteins 9-16","Proteins 17-24","Proteins 25-32") 
 
 
-boxplot <- ggplot(aggregated_LRP_data, aes(x =sample_group, y=(100*meanLRP), group = sample_group)) + 
+boxplot <- ggplot(aggregated_LRP_data, aes(x =sample_group, y=(meanLRP), group = sample_group)) + 
   geom_boxplot(outlier.shape=NA) + 
   facet_grid(pp_group ~ mp_group)+
   ggtitle('J') +
   xlab("Interaction group")+
   ylab("LRP")+
   coord_trans(y = 'log2')+
-  scale_y_continuous(breaks = c(0.0,0.1, 1.0, 10)) + 
+  scale_y_continuous(breaks = c(0.0, 0.1, 1.0, 10)) + 
   theme_bw() +
   theme(
     axis.title = element_text(size=textsize),

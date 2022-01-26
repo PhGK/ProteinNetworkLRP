@@ -98,7 +98,7 @@ class LRP_Linear(nn.Module):
         if sign == 1:
             rho = lambda p: p + self.gamma * p.clamp(min=0) # Replace 1e-9 by zero
         else:
-            rho = lambda p: p + self.gamma * p.clamp(max=0) # same here
+            rho = lambda p: p - self.gamma * p.clamp(max=0) # same here
 
         layer_new = copy.deepcopy(self.linear)
 
@@ -115,6 +115,99 @@ class LRP_Linear(nn.Module):
         return layer_new
 
 
+class LRP_Linear_old(nn.Module):
+    def __init__(self, inp, outp, gamma=0.01, eps=1e-5):
+        super(LRP_Linear, self).__init__()
+        self.A_dict = {}
+        self.linear = nn.Linear(inp, outp)
+        #nn.init.xavier_uniform_(self.linear.weight, gain=nn.init.calculate_gain('relu'))
+        #nn.init.xavier_normal_(self.linear.weight)
+        #nn.init.normal_(self.linear.weight, mean=0, std=0.01)
+        self.gamma = tc.tensor(gamma)
+        self.eps = tc.tensor(eps)
+        self.rho = None
+        self.iteration = None
+
+    def forward(self, x):
+
+        if not self.training:
+            self.A_dict[self.iteration] = x.clone()
+        return self.linear(x)
+
+    def relprop(self, R):
+
+        device = next(self.parameters()).device
+        # print('rel', self.iteration, self.A_dict[self.iteration].sum())
+        A = self.A_dict[self.iteration].clone()
+        A, self.eps = A.to(device), self.eps.to(device)
+        Ap = tc.where(A > self.eps, A, tc.tensor(stable).to(device)).detach().data.requires_grad_(True)
+        Am = tc.where(A < -self.eps, A, tc.tensor(-stable).to(device)).detach().data.requires_grad_(True)
+
+        zpp = self.newlayer(1).forward(Ap)  # + self.eps
+        zmm = self.newlayer(-1, no_bias=True).forward(Am)  # + self.eps
+
+        zmp = self.newlayer(1, no_bias=True).forward(Am)  # - self.eps
+        zpm = self.newlayer(-1).forward(Ap)  # - self.eps
+
+        with tc.no_grad():
+            Y = self.forward(A).data
+        sp = ((Y > self.eps).float() * R / (zpp + zmm + self.eps)).data  # .requires_grad_(True)
+        sm = ((Y < -self.eps).float()* R / (zmp + zpm + self.eps)).data  # .requires_grad_(True)
+
+        (zpp * sp).sum().backward()
+        cpp = Ap.grad
+        Ap.grad = None
+        Ap.requires_grad_(True)
+
+        (zpm * sm).sum().backward()
+        cpm = Ap.grad
+        Ap.grad = None
+        Ap.requires_grad_(True)
+
+        (zmp * sp).sum().backward()
+        cmp = Am.grad
+        # Am.grad.detach_()
+        # Am.grad.zero_()
+        Am.grad = None
+        Am.requires_grad_(True)
+
+        (zmm * sm).sum().backward()
+        cmm = Am.grad
+        # Am.grad.detach_()
+        # Am.grad.zero_()
+        Am.grad = None
+        Am.requires_grad_(True)
+
+
+        R_1 = (Ap * cpp).data
+        R_2 = (Ap * cpm).data
+        R_3 = (Am * cmp).data
+        R_4 = (Am * cmm).data
+        # print('R1',R_1,R_2,'R3', R_3,R_4)
+        
+        return R_1 + R_2 + R_3 + R_4
+
+    def newlayer(self, sign, no_bias=False):
+
+        if sign == 1:
+            rho = lambda p: p + self.gamma * p.clamp(min=stable)
+        else:
+            rho = lambda p: p - self.gamma * p.clamp(max=-stable)
+
+        layer_new = copy.deepcopy(self.linear)
+
+        try:
+            layer_new.weight = nn.Parameter(rho(self.linear.weight))
+        except AttributeError:
+            pass
+
+        try:
+            layer_new.bias = nn.Parameter(self.linear.bias * 0 if no_bias else rho(self.linear.bias))
+        except AttributeError:
+            pass
+
+
+        return layer_new
 
 
 class LRP_ReLU(nn.Module):
@@ -161,7 +254,7 @@ class Model(nn.Module):
             self.layers.add_module('LRP_Linear' + str(i + 1), LRP_Linear(hidden, hidden, gamma=gamma))
             self.layers.add_module('LRP_ReLU' + str(i + 1), LRP_ReLU())
 
-        self.layers.add_module('LRP_Linear_last', LRP_Linear(hidden, outp, gamma=gamma))
+        self.layers.add_module('LRP_Linear_last', LRP_Linear(hidden, outp, gamma=1e-5))
 
         if hidden_depth==-1:
             self.layers = nn.Sequential(LRP_Linear2(inp, outp, gamma=gamma))

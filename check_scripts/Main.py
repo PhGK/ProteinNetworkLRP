@@ -16,8 +16,8 @@ gamma = 0.01
 lr = 0.03
 nepochs= 3601
 
-njobs=1
-cuda=True
+njobs=5
+cuda=False
 PATH = '.'
 nbatch = 250
 

@@ -177,10 +177,9 @@ plotobject2 <- plotobject +
   xlab("Cancer")+
   labs(fill = "Cancer")
 
+
 plotobject2 <- plotobject + 
   geom_text(data = high_names, aes(label = Cancer_Type),hjust = -0.3, angle = 90) + 
-  geom_errorbar(data = subset_data, aes(ymin=meanLRP, ymax=meanLRP+IQR), width=.2,
-                position=position_dodge(.9)) +
   facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
   geom_text(data = description, aes(x = 10, y = 13.0, label = paste('median: ', round(meanLRP, digits=3), 'IQR: ', round(IQR, digits=3)))) + 
   geom_text(data = description, aes(x = 11, y = 11.5, label = paste('p: ', adjpvalue))) + 
@@ -196,7 +195,26 @@ plotobject2 <- plotobject +
   xlab("Cancer")+
   labs(fill = "Cancer")
 
-png("../plots_statistics/figures/highest_wrap.png",width = 1000, height = 1000)
+plotobject2 <- plotobject + 
+  geom_text(data = high_names, aes(label = Cancer_Type,hjust = -0.18*(meanLRP + IQR) - 0.35), angle = 90, cex = 3.5) + 
+  geom_errorbar(data = subset_data, aes(ymin=meanLRP, ymax=meanLRP+IQR), width=.2,
+                position=position_dodge(.9)) +
+  facet_wrap( ~ masked_protein+predicting_protein, nrow = 6) +
+  geom_text(data = description, aes(x = 10, y = 10, label = paste('median: ', round(meanLRP, digits=2), 'IQR: ', round(IQR, digits=2)))) + 
+  geom_text(data = description, aes(x = 11, y = 8.5, label = paste('p: ', adjpvalue))) + 
+  theme_bw()+
+  theme(axis.text.x = element_blank(), 
+        strip.background = element_blank(),
+        strip.text  = element_text(size=11),
+        axis.title = element_text(size=15),
+        legend.text = element_text(size=15),
+        legend.title = element_text(size=18))+
+  scale_y_continuous(expand= expansion(c(0,0.1)))+
+  ylab("median LRP")+
+  xlab("Cancer")+
+  labs(fill = "Cancer")
+
+png("../plots_statistics/figures/highest_wrap.png",width = 1000, height = 1000) # 15,15
 plotobject2
 dev.off()
 plotobject2

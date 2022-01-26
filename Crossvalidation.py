@@ -16,15 +16,15 @@ PATH = '.'
 model_path = PATH + '/results/crossvalidation/models/'
 RESULTPATH = PATH + '/results/crossvalidation/cv.csv'
 if os.path.exists(RESULTPATH):
-    os.remove(RESULTPATH)
+    pass#os.remove(RESULTPATH)
 
 
-nepochs = 2001
-njobs = 20 
+nepochs = 4001
+njobs = 8
 learning_rates = [0.1, 0.03, 0.01, 0.003]
 nloops=10
-hidden_depths = [1,2,3,4]
-nbatch = 50
+hidden_depths = [0]
+nbatch = 250
 
 def crossval(loop, learning_rate, hidden_depth):
     for hidden_factor in [10, 5]:

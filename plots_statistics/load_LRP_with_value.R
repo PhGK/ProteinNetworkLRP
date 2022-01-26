@@ -28,7 +28,7 @@ all_data_ORGAN <- inner_join(ORGANS, all_data, by = c('ID'='sample_name') )
 
 print(length(filenames))
 
-write.csv(all_data_ORGAN,paste0(USEPATH, 'all_data.csv'), row.names=F)
+#write.csv(all_data_ORGAN,paste0(USEPATH, 'all_data.csv'), row.names=F)
 print(dim(all_data))
 
 
