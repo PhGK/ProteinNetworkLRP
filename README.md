@@ -7,13 +7,13 @@ All experiments that calculate LRP values are based on pytorch. In order to effi
 
 1) Computation of biological networks
 The computation of protein interaction networks for individual patient's tumors can be replicated by running the script Main.py. The script allows the setting of several hyperparameters.
-hidden_factor: Integer that defines the width of hidden layers (= hidden_factor * number of proteins).
-hidden_depth: number of hidden layers -1
-gamma: LRP hyper parameter
-lr: learning rate (we currently use gradient descent with momentum)
-nbatch: batch size
-cuda: Boolean. If True, experiment will run on the gpu
-njobs: number of parallel jobs. Will not effect training of network
+- hidden_factor: Integer that defines the width of hidden layers (= hidden_factor * number of proteins).
+- hidden_depth: number of hidden layers -1
+- gamma: LRP hyper parameter
+- lr: learning rate (we currently use gradient descent with momentum)
+- nbatch: batch size
+- cuda: Boolean. If True, experiment will run on the gpu
+- njobs: number of parallel jobs. Will not effect training of network
 
 Results can be found in results/LRP/raw_data
 
