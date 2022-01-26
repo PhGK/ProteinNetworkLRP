@@ -15,8 +15,13 @@ nbatch: batch size
 cuda: Boolean. If True, experiment will run on the gpu
 njobs: number of parallel jobs. Will not effect training of network
 
+Results can be found in results/LRP/raw_data
+
 2) Computation of artificial networks
 The script Main_artificial.py replicates results from Figure 3 of the manuscript. The script works like 1), but users can set datatype to 'homogeneous' or 'heterogeneous' to generate data with either one or multiple different underlying networks.
 
+Results can be found in results/artificial/homogeneous/raw_data or results/artificial/heterogeneous/raw_data
+
 3) Crossvalidation
-Model Crossvalidation for the biological networks can be replicated using the script 'Crossvalidation.py'.
+Model crossvalidation for the biological networks can be replicated using the script 'Crossvalidation.py'. This can be parallelized using njobs.
+Results can be found in results/crossvalidation
