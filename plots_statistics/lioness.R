@@ -9,13 +9,14 @@ library(dplyr)
 library(parallel)
 library(tidyr)
 library(pROC)
+library(rlist)
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
-trainset <- fread('../data/artficial_heterogeneous_train.csv')[-1,-1]
-testset <- fread('../data/artficial_heterogeneous_test.csv')[-1,-1]
+trainset <- fread('../data/artificial_heterogeneous_train.csv', header=T)
+testset <- fread('../data/artificial_heterogeneous_test.csv',  header=T)
 
 
-subset <- trainset[1:2000,] %>% as.matrix() %>% t()
-result <- lioness(subset)
+subs <- trainset[1:2000,-1] %>% as.matrix() %>% t()
+result <- lioness(subs)
 
 values <- assay(result, "lioness") %>% data.frame() %>%.[,1801:1802] %>% abs()
 
@@ -27,30 +28,35 @@ sepvalues <- tidyr::separate(meanvalues, col = id, sep = "_", into=c('a', 'b'))
 sepvalues['c'] <- as.numeric(gsub("^.{1}", "", sepvalues$a))
 sepvalues['d'] <- as.numeric(gsub("^.{1}", "", sepvalues$b))
 
-ggplot(sepvalues, aes(c, d, fill= .)) + 
+sepvalues['c'] <- as.numeric(sepvalues$a)
+sepvalues['d'] <- as.numeric(sepvalues$b)
+
+ggplot(sepvalues, aes(c,d, fill= .)) + 
   geom_tile()
 ##########################################################
 
 infer <- function(i){
   print(i)
-  sample <- testset[i,]
-  inferset <- rbind(sample, trainset)
+  sample <- testset[i,-1]
+  inferset <- rbind(sample, trainset[,-1])
   infermatrix <- inferset %>% as.matrix() %>% t()
   values <- lioness(infermatrix) %>% assay("lioness") %>% data.frame() %>%.[,1]
+  values <- data.frame(values)
+  colnames(values) <- testset[i,1]
   values
 }
 
-results <- sapply(seq(1000), infer) %>% cbind("c"=sepvalues$c, "d"=sepvalues$d, .) %>% data.frame()
+nfiles <- 2000
+
+results <- lapply(seq(nfiles), infer) %>% list.cbind() %>% cbind(data.frame("c"=sepvalues$c, "d"=sepvalues$d), .)# %>% data.frame()
 
 write.table(results,'../plots_statistics/figures/lioness_result.csv', sep=",", row.names=F)
-ggplot(results, aes(c, d, fill= V700)) + 
+ggplot(results, aes(c, d, fill= `2230`)) + 
   geom_tile()
 
 #####################################
 
-results <- fread('../plots_statistics/figures/lioness_result.csv')
-colnames(results)[3:1002] <- 1:1000
-#results$sample_id <- as.numeric(rownames(results))
+results_load <- fread('../plots_statistics/figures/lioness_result.csv')
 
 results_long <- pivot_longer(results, cols = !c("c", "d"), names_to = "sample", values_to = "inf_interaction") 
 results_long$inf_interaction <- abs(results_long$inf_interaction)
@@ -61,13 +67,13 @@ results_long$interaction_group <- (results_long$sample-1) %/% 1000+1
 results_long_struc <- results_long %>% 
   dplyr::mutate("ground_truth" = ifelse(c <= interaction_group*8 & c >= interaction_group*8-7 & 
                                           d <= interaction_group*8 & d >= interaction_group*8-7,1,0)) %>%
-  filter(!(c == d))
+  dplyr::filter(!(c == d))
 
 rocplot <- roc(results_long_struc$ground_truth, results_long_struc$inf_interaction,  ci=TRUE, plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, print.auc=TRUE)
 
 
 spec <- results_long_struc %>% 
-  filter((c-1)%/%8 == (d-1)%/%8)
+  dplyr::filter((c-1)%/%8 == (d-1)%/%8)
 
 
 rocplot <- roc(spec$ground_truth, spec$inf_interaction,  ci=TRUE, plot=TRUE, auc.polygon=TRUE, max.auc.polygon=TRUE, grid=TRUE, print.auc=TRUE)
