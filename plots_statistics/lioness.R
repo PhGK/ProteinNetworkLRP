@@ -25,11 +25,8 @@ meanvalues['id'] <- rownames(meanvalues)
 
 sepvalues <- tidyr::separate(meanvalues, col = id, sep = "_", into=c('a', 'b'))
 
-sepvalues['c'] <- as.numeric(gsub("^.{1}", "", sepvalues$a))
-sepvalues['d'] <- as.numeric(gsub("^.{1}", "", sepvalues$b))
-
-sepvalues['c'] <- as.numeric(sepvalues$a)
-sepvalues['d'] <- as.numeric(sepvalues$b)
+sepvalues['c'] <- as.numeric(sepvalues$a)+1
+sepvalues['d'] <- as.numeric(sepvalues$b)+1
 
 ggplot(sepvalues, aes(c,d, fill= .)) + 
   geom_tile()
@@ -93,7 +90,7 @@ f$c_group<- as.factor(f$c_group)
 f$d_group <- as.factor(f$d_group)
 
 aggregated_data <- f %>% group_by(sample, c_group, d_group, interaction_group) %>%
-  dplyr::summarize(mean_ = (mean(inf_interaction))) %>% mutate("grid_" = 10*c_group + d_group)
+  dplyr::summarize(mean_ = (mean(inf_interaction))) %>% mutate("grid_" = 10*as.numeric(c_group) + as.numeric(d_group))
 
 boxplot <- ggplot(aggregated_data, aes(x =interaction_group, y=mean_, group = interaction_group)) + 
   geom_boxplot() + 
@@ -131,3 +128,4 @@ meandata <- results_long_struc %>% filter(interaction_group == 3, sample %in% se
 ggplot(meandata, aes(c, d, fill= inf_interaction)) +
   facet_wrap(~sample)+
   geom_tile()
+
