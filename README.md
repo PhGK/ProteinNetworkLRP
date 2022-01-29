@@ -32,7 +32,7 @@ First, an instance of the LRP model is created.
 ``` 
 from LRPclass_precise import LRP
 
-model = LRP()
+model = LRP(2*nfeatures, nfeatures, hidden_features, network_depth)
 ```
 
 The model needs to be trained. # traindata is a pandas dataframe with size n_train_samples * nfeatures. In order to prevent overfitting, a test data set must be provided with equal amount of features. 
@@ -49,3 +49,5 @@ compute_network() computes the network of one sample from `use_data`. The sample
 ```
 model.compute_network(use_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")
 ```
+
+We show a minimum working example in Working example.ipynb
