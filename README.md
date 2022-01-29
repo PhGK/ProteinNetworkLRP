@@ -28,8 +28,10 @@ Results can be found in results/crossvalidation
 4) Customized individual network predict
 Using the LRP class we facilitate the computation of networks for individual samples. 
 ``` 
+cuda=False
 from LRPclass_precise import LRP
-LRP.train(traindata) # traindata is a pandas dataframe with size nsamples * nfeatures
-LRP.
+model = LRP()
+model.train(traindata) # traindata is a pandas dataframe with size nsamples * nfeatures
+model.compute_network(use_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")
 
 ```
