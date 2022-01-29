@@ -24,3 +24,12 @@ Results can be found in results/artificial/homogeneous/raw_data or results/artif
 3) Crossvalidation
 Model crossvalidation for the biological networks can be replicated using the script 'Crossvalidation.py'. This can be parallelized using njobs.
 Results can be found in results/crossvalidation
+
+4) Customized individual network predict
+Using the LRP class we facilitate the computation of networks for individual samples. 
+``` 
+from LRPclass_precise import LRP
+LRP.train(traindata) # traindata is a pandas dataframe with size nsamples * nfeatures
+LRP.
+
+```
