@@ -34,16 +34,16 @@ from LRPclass_precise import LRP
 
 model = LRP(2*nfeatures, nfeatures, hidden_features, network_depth)
 ```
-
-The model needs to be trained. # traindata is a pandas dataframe with size n_train_samples * nfeatures. In order to prevent overfitting, a test data set must be provided with equal amount of features. 
+Note that the input dimension of the model is twice the feature dimension of the original samples in question. This is due to the feature expansion which is necessary for the imputation task of the model. Next, the model needs to be trained. 
+train_data is a pandas dataframe with size n_train_samples * nfeatures. In order to prevent overfitting, a test data set must be provided with equal amount of features. 
 
 ```
 cuda=False
-model.train(traindata, test_data, epochs, lr = 0.03, batch_size=250, device=tc.device(tc.device("cuda:0" if cuda else "cpu"))
+model.train(train_data, test_data, epochs, lr = 0.03, batch_size=250, device=tc.device(tc.device("cuda:0" if cuda else "cpu"))
 ```
 
- use_data is a pandas frame with size nsamples * nfeatures (nfeatures must be equal to nfeatures of traindata).
-compute_network() computes the network of one sample from `use_data`. The sample must be identified by its sample_id (row number) and its pandas index in use data.
+ use_data is a pandas frame with size n_test_samples * nfeatures (Number of features must be equal to number of features of train_data).
+compute_network() computes the network of one sample from `use_data`. The sample must be identified by its sample_id (row number) and and additional sample name.
 The individual network of will be saved in RESULTPATH.
 
 ```
