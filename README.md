@@ -34,7 +34,7 @@ from LRPclass_precise import LRP
 
 model = LRP(2*nfeatures, nfeatures, hidden_features, network_depth)
 ```
-Note that the input dimension of the model is twice the feature dimension of the original samples in question. This is due to the feature expansion which is necessary for the imputation task of the model. Next, the model needs to be trained. 
+Note that the input dimension of the model is twice the feature dimension of the original samples in question. This is due to the feature expansion which is necessary for the imputation task. 
 train_data is a pandas dataframe with size n_train_samples * nfeatures. In order to prevent overfitting, a test data set must be provided with equal amount of features. 
 
 ```
