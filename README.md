@@ -13,7 +13,7 @@ The computation of protein interaction networks for individual patient's tumors 
 - lr: learning rate (we currently use gradient descent with momentum)
 - nbatch: batch size
 - cuda: Boolean. If True, experiment will run on the gpu
-- njobs: number of parallel jobs. Will not effect training of network
+- njobs: number of parallel jobs. This will not affect the training of the network.
 Results can be found in results/LRP/raw_data
 
 2) Computation of artificial networks
@@ -25,8 +25,8 @@ Results can be found in results/artificial/homogeneous/raw_data or results/artif
 Model crossvalidation for the biological networks can be replicated using the script 'Crossvalidation.py'. This can be parallelized using njobs.
 Results can be found in results/crossvalidation
 
-4) Customized individual network predict
-Using the LRP class we facilitate the computation of networks for individual samples. 
+4) Customized individual network predictions
+Using the LRP class, we facilitate the computation of networks for individual samples.
 First, an instance of the LRP model is created.
 
 ``` 
