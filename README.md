@@ -13,7 +13,8 @@ The computation of protein interaction networks for individual patient's tumors 
 - lr: learning rate (we currently use gradient descent with momentum)
 - nbatch: batch size
 - cuda: Boolean. If True, experiment will run on the gpu
-- njobs: number of parallel jobs. This will not affect the training of the network.
+- njobs: number of parallel jobs. This will not affect the training of the network.  
+  
 Results can be found in results/LRP/raw_data
 
 **2) Computation of artificial networks**  
