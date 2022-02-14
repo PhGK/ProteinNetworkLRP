@@ -5,7 +5,7 @@ This repository contains all data and code related to our manuscript 'Predicting
 
 All experiments that calculate LRP values are based on pytorch. In order to efficiently process large datasets computing can be parallelized and run on the gpu.
 
-1) Computation of biological networks  
+**1) Computation of biological networks**  
 The computation of protein interaction networks for individual patient's tumors can be replicated by running the script Main.py. The script allows the setting of several hyperparameters.
 - hidden_factor: Integer that defines the width of hidden layers (= hidden_factor * number of proteins).
 - hidden_depth: number of hidden layers -1
@@ -16,16 +16,16 @@ The computation of protein interaction networks for individual patient's tumors 
 - njobs: number of parallel jobs. This will not affect the training of the network.
 Results can be found in results/LRP/raw_data
 
-2) Computation of artificial networks  
+**2) Computation of artificial networks**  
 The script Main_artificial.py replicates results from Figure 3 of the manuscript. The script works like 1), but users can set datatype to 'homogeneous' or 'heterogeneous' to generate data with either one or multiple different underlying networks.
 
 Results can be found in results/artificial/homogeneous/raw_data or results/artificial/heterogeneous/raw_data
 
-3) Crossvalidation  
+**3) Crossvalidation**  
 Model crossvalidation for the biological networks can be replicated using the script 'Crossvalidation.py'. This can be parallelized using njobs.
 Results can be found in results/crossvalidation
 
-4) Customized individual network predictions  
+**4) Customized individual network predictions**  
 Using the LRP class, we facilitate the computation of networks for individual samples.
 First, an instance of the LRP model is created.
 
