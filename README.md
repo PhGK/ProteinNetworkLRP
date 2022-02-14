@@ -44,7 +44,7 @@ model.train(train_data, test_data, epochs, lr = 0.03, batch_size=250, device=tc.
 
  use_data is a pandas frame with size n_test_samples * n_features (Number of features must be equal to number of features of train_data).
 compute_network() computes the network of one sample from `use_data`. The sample must be identified by its sample_id (row number) and and additional sample name.
-The individual network of will be saved in RESULTPATH.
+The individual network will be saved in RESULTPATH.
 
 ```
 model.compute_network(use_data, sample_name, sample_id, RESULTPATH, device = tc.device("cuda:0" if cuda else "cpu")
