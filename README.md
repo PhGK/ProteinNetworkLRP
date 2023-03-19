@@ -1,5 +1,5 @@
 # ProteinNetworkLRP
-Predicting patient-level proteomic networks by explainable artificial intelligence
+Predicting patient-level proteomic networks by explainable artificial intelligence [Keyl, Bockmayr et al](https://www.nature.com/articles/s41698-022-00278-4)
 
 This repository contains all data and code related to our manuscript 'Predicting patient-level proteomic networks by explainable artificial intelligence'. It allows the replication of all experiments and provides users with a python class to predict networks for individual samples for their own data.
 
@@ -52,3 +52,5 @@ model.compute_network(use_data, sample_name, sample_id, RESULTPATH, device = tc.
 ```
 
 We show a minimum working example in Working example.ipynb
+
+
